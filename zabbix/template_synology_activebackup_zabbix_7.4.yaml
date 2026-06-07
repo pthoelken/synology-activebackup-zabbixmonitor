@@ -1,0 +1,522 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1001
+      name: Templates/Synology
+  templates:
+    - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1002
+      template: 'Template Synology Active Backup Zabbix'
+      name: 'Template Synology Active Backup Zabbix'
+      description: |
+        Monitors Synology Active Backup for Business and Active Backup for Microsoft 365 via the synology-activebackup-zabbix DSM package.
+      vendor:
+        name: pthoelken
+        version: 0.1.0
+      groups:
+        - name: Templates/Synology
+      items:
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1101
+          name: 'Active Backup collector health'
+          key: synology.activebackup.health
+          delay: 5m
+          history: 30d
+          trends: 365d
+          value_type: UNSIGNED
+          valuemap:
+            name: 'Active Backup Health'
+          tags:
+            - tag: component
+              value: collector
+          triggers:
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1201
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.health)=0'
+              name: 'Active Backup: Collector Fehler'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1102
+          name: 'Active Backup collector health JSON'
+          key: synology.activebackup.health.json
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: component
+              value: collector
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1103
+          name: 'Active Backup for Business database missing'
+          key: 'synology.activebackup.product.db_missing[abb]'
+          delay: 5m
+          history: 30d
+          trends: 365d
+          value_type: UNSIGNED
+          tags:
+            - tag: component
+              value: database
+            - tag: product
+              value: abb
+          triggers:
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1202
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.product.db_missing[abb])=1'
+              name: 'Active Backup for Business: Datenbank nicht gefunden'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1104
+          name: 'Active Backup for Microsoft 365 database missing'
+          key: 'synology.activebackup.product.db_missing[m365]'
+          delay: 5m
+          history: 30d
+          trends: 365d
+          value_type: UNSIGNED
+          tags:
+            - tag: component
+              value: database
+            - tag: product
+              value: m365
+          triggers:
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1203
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.product.db_missing[m365])=1'
+              name: 'Active Backup for Microsoft 365: Datenbank nicht gefunden'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1105
+          name: 'Active Backup successful jobs'
+          key: synology.activebackup.jobs.successful
+          delay: 5m
+          history: 30d
+          trends: 365d
+          value_type: UNSIGNED
+          tags:
+            - tag: component
+              value: summary
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1106
+          name: 'Active Backup failed jobs'
+          key: synology.activebackup.jobs.failed
+          delay: 5m
+          history: 30d
+          trends: 365d
+          value_type: UNSIGNED
+          tags:
+            - tag: component
+              value: summary
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1107
+          name: 'Active Backup jobs with warning or error'
+          key: synology.activebackup.jobs.problem
+          delay: 5m
+          history: 30d
+          trends: 365d
+          value_type: UNSIGNED
+          tags:
+            - tag: component
+              value: summary
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1108
+          name: 'Active Backup total jobs'
+          key: synology.activebackup.jobs.total
+          delay: 5m
+          history: 30d
+          trends: 365d
+          value_type: UNSIGNED
+          tags:
+            - tag: component
+              value: summary
+      discovery_rules:
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2001
+          name: 'Active Backup for Business Discovery'
+          key: 'synology.activebackup.discovery[abb]'
+          delay: 5m
+          lifetime: 7d
+          item_prototypes:
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2101
+              name: 'Backup status [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.status[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              valuemap:
+                name: 'Active Backup Status'
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2102
+              name: 'Backup age [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.age[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: s
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2103
+              name: 'Backup last successful age [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: s
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2104
+              name: 'Backup error code [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.error[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2105
+              name: 'Backup runtime [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.runtime[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: s
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2106
+              name: 'Backup transferred size [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.transferred_size[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: B
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2107
+              name: 'Backup last end time [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.last_end_time[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: unixtime
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2108
+              name: 'Backup info [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.info[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+          trigger_prototypes:
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2201
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>1 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>8 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>9'
+              name: 'Backup fehlgeschlagen: [{#PRODUCT}] {#JOBNAME}'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2202
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}])>{$ACTIVEBACKUP.MAX_AGE_HOURS}*3600'
+              name: 'Backup zu alt: [{#PRODUCT}] {#JOBNAME}'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: capacity
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2203
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=8 or nodata(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}],15m)=1'
+              name: 'Keine Laufdaten vorhanden: [{#PRODUCT}] {#JOBNAME}'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3001
+          name: 'Active Backup for Microsoft 365 Discovery'
+          key: 'synology.activebackup.discovery[m365]'
+          delay: 5m
+          lifetime: 7d
+          item_prototypes:
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3101
+              name: 'Backup status [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.status[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              valuemap:
+                name: 'Active Backup Status'
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3102
+              name: 'Backup age [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.age[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: s
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3103
+              name: 'Backup last successful age [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: s
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3104
+              name: 'Backup error code [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.error[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3105
+              name: 'Backup runtime [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.runtime[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: s
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3106
+              name: 'Backup transferred size [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.transferred_size[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: B
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3107
+              name: 'Backup last end time [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.last_end_time[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 30d
+              trends: 365d
+              value_type: UNSIGNED
+              units: unixtime
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3108
+              name: 'Backup info [{#PRODUCT}] {#JOBNAME}'
+              key: 'synology.activebackup.job.info[{#PRODUCT},{#TASKID}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: backup
+                - tag: product
+                  value: '{#PRODUCT}'
+          trigger_prototypes:
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3201
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>1 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>8 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>9'
+              name: 'Backup fehlgeschlagen: [{#PRODUCT}] {#JOBNAME}'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3202
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}])>{$ACTIVEBACKUP.MAX_AGE_HOURS}*3600'
+              name: 'Backup zu alt: [{#PRODUCT}] {#JOBNAME}'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: capacity
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3203
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=8 or nodata(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}],15m)=1'
+              name: 'Keine Laufdaten vorhanden: [{#PRODUCT}] {#JOBNAME}'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+      tags:
+        - tag: class
+          value: backup
+        - tag: target
+          value: synology
+      macros:
+        - macro: '{$ACTIVEBACKUP.MAX_AGE_HOURS}'
+          value: '30'
+          description: 'Maximum age in hours for the last successful backup run.'
+          config:
+            type: TEXT
+            priority: '1'
+            section_name: Thresholds
+            label: 'Maximum backup age in hours'
+            regex: '^[0-9]+$'
+      dashboards:
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf4001
+          name: 'Active Backup'
+          pages:
+            - name: Overview
+              widgets:
+                - type: item
+                  name: 'Successful jobs'
+                  x: '0'
+                  'y': '0'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Template Synology Active Backup Zabbix'
+                        key: synology.activebackup.jobs.successful
+                    - type: STRING
+                      name: reference
+                      value: SABSJ
+                - type: item
+                  name: 'Failed jobs'
+                  x: '18'
+                  'y': '0'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Template Synology Active Backup Zabbix'
+                        key: synology.activebackup.jobs.failed
+                    - type: STRING
+                      name: reference
+                      value: SABFJ
+                - type: item
+                  name: 'Jobs with warning or error'
+                  x: '36'
+                  'y': '0'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Template Synology Active Backup Zabbix'
+                        key: synology.activebackup.jobs.problem
+                    - type: STRING
+                      name: reference
+                      value: SABPJ
+                - type: item
+                  name: 'Total jobs'
+                  x: '54'
+                  'y': '0'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Template Synology Active Backup Zabbix'
+                        key: synology.activebackup.jobs.total
+                    - type: STRING
+                      name: reference
+                      value: SABTJ
+                - type: item
+                  name: 'Backup age je Job'
+                  x: '0'
+                  'y': '4'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: ITEM_PROTOTYPE
+                      name: itemid.0
+                      value:
+                        host: 'Template Synology Active Backup Zabbix'
+                        key: 'synology.activebackup.job.age[{#PRODUCT},{#TASKID}]'
+                    - type: STRING
+                      name: reference
+                      value: SABAJ
+                - type: item
+                  name: 'Letzter Lauf je Job'
+                  x: '36'
+                  'y': '4'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: ITEM_PROTOTYPE
+                      name: itemid.0
+                      value:
+                        host: 'Template Synology Active Backup Zabbix'
+                        key: 'synology.activebackup.job.last_end_time[{#PRODUCT},{#TASKID}]'
+                    - type: STRING
+                      name: reference
+                      value: SABLR
+      valuemaps:
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf5001
+          name: 'Active Backup Status'
+          mappings:
+            - value: '1'
+              newvalue: OK
+            - value: '6'
+              newvalue: Failed
+            - value: '8'
+              newvalue: 'No data'
+            - value: '9'
+              newvalue: 'DB missing'
+            - value: '10'
+              newvalue: Unknown
+        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf5002
+          name: 'Active Backup Health'
+          mappings:
+            - value: '0'
+              newvalue: Problem
+            - value: '1'
+              newvalue: OK

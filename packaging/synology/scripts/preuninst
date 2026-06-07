@@ -1,0 +1,11 @@
+#!/bin/sh
+
+PKG_NAME="synology-activebackup-zabbix"
+PKG_ROOT="/var/packages/${PKG_NAME}"
+SCRIPT="${PKG_ROOT}/scripts/start-stop-status"
+
+if [ -x "${SCRIPT}" ]; then
+  "${SCRIPT}" stop >/dev/null 2>&1 || true
+fi
+
+exit 0

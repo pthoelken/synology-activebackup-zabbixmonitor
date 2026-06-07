@@ -1,0 +1,23 @@
+#!/bin/sh
+
+PKG_NAME="synology-activebackup-zabbix"
+PKG_ROOT="/var/packages/${PKG_NAME}"
+PKG_TARGET="${SYNOPKG_PKGDEST:-${PKG_ROOT}/target}"
+CONFIG_FILE="${PKG_ROOT}/etc/config.yml"
+BIN="${PKG_TARGET}/bin/synology-activebackup-zabbix"
+
+mkdir -p "${PKG_ROOT}/etc" "${PKG_ROOT}/var/log" "${PKG_ROOT}/var/cache" "${PKG_ROOT}/var/run"
+
+if [ ! -f "${CONFIG_FILE}" ]; then
+  if [ -f "${PKG_TARGET}/etc/config.yml" ]; then
+    cp "${PKG_TARGET}/etc/config.yml" "${CONFIG_FILE}"
+  elif [ -x "${BIN}" ]; then
+    "${BIN}" --config "${CONFIG_FILE}" write-default-config
+  fi
+fi
+
+if [ -x "${BIN}" ]; then
+  "${BIN}" --config "${CONFIG_FILE}" install-userparameter --binary "${BIN}" >/dev/null 2>&1 || true
+fi
+
+exit 0

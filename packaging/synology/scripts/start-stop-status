@@ -1,0 +1,56 @@
+#!/bin/sh
+
+PKG_NAME="synology-activebackup-zabbix"
+PKG_ROOT="/var/packages/${PKG_NAME}"
+PKG_TARGET="${SYNOPKG_PKGDEST:-${PKG_ROOT}/target}"
+BIN="${PKG_TARGET}/bin/synology-activebackup-zabbix"
+CONFIG_FILE="${PKG_ROOT}/etc/config.yml"
+PID_FILE="${PKG_ROOT}/var/run/synology-activebackup-zabbix.pid"
+LOG_FILE="${PKG_ROOT}/var/log/service.out"
+
+is_running() {
+  [ -f "${PID_FILE}" ] || return 1
+  PID="$(cat "${PID_FILE}")"
+  [ -n "${PID}" ] || return 1
+  kill -0 "${PID}" >/dev/null 2>&1
+}
+
+case "$1" in
+  start)
+    if is_running; then
+      exit 0
+    fi
+    mkdir -p "${PKG_ROOT}/var/run" "${PKG_ROOT}/var/log" "${PKG_ROOT}/var/cache"
+    nohup "${BIN}" --config "${CONFIG_FILE}" service >>"${LOG_FILE}" 2>&1 &
+    echo "$!" >"${PID_FILE}"
+    exit 0
+    ;;
+  stop)
+    if is_running; then
+      PID="$(cat "${PID_FILE}")"
+      kill "${PID}" >/dev/null 2>&1 || true
+      i=0
+      while kill -0 "${PID}" >/dev/null 2>&1; do
+        i=$((i + 1))
+        [ "${i}" -ge 20 ] && break
+        sleep 1
+      done
+    fi
+    rm -f "${PID_FILE}"
+    exit 0
+    ;;
+  status)
+    if is_running; then
+      exit 0
+    fi
+    exit 1
+    ;;
+  log)
+    echo "${LOG_FILE}"
+    exit 0
+    ;;
+  *)
+    echo "usage: $0 {start|stop|status|log}" >&2
+    exit 2
+    ;;
+esac
