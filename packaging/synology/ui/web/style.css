@@ -434,6 +434,33 @@ tr:last-child td {
   margin-top: 10px;
 }
 
+.sender-chunks {
+  margin-top: 10px;
+}
+
+.debug-block {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfcfe;
+  margin: 10px 0;
+  padding: 10px 12px;
+}
+
+.debug-block ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.debug-block li {
+  margin: 4px 0;
+}
+
+.debug-title {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
 .value-cell {
   max-width: 560px;
   white-space: pre-wrap;

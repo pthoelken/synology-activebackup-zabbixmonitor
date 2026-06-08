@@ -30,13 +30,14 @@ type SenderValue struct {
 }
 
 type SenderReport struct {
-	Values       int      `json:"values"`
-	Chunks       int      `json:"chunks"`
-	Processed    int      `json:"processed,omitempty"`
-	Failed       int      `json:"failed,omitempty"`
-	Total        int      `json:"total,omitempty"`
-	SecondsSpent float64  `json:"seconds_spent,omitempty"`
-	Infos        []string `json:"infos,omitempty"`
+	Values       int              `json:"values"`
+	Chunks       int              `json:"chunks"`
+	Processed    int              `json:"processed,omitempty"`
+	Failed       int              `json:"failed,omitempty"`
+	Total        int              `json:"total,omitempty"`
+	SecondsSpent float64          `json:"seconds_spent,omitempty"`
+	Infos        []string         `json:"infos,omitempty"`
+	ChunkResults []SenderChunkLog `json:"chunk_results,omitempty"`
 }
 
 type SenderLog struct {
@@ -44,20 +45,36 @@ type SenderLog struct {
 }
 
 type SenderLogEntry struct {
-	At          time.Time     `json:"at"`
-	OK          bool          `json:"ok"`
-	Server      string        `json:"server"`
-	Port        int           `json:"port"`
-	TLS         string        `json:"tls"`
-	Host        string        `json:"host"`
-	ValuesCount int           `json:"values_count"`
-	Chunks      int           `json:"chunks"`
-	Processed   int           `json:"processed,omitempty"`
-	Failed      int           `json:"failed,omitempty"`
-	Total       int           `json:"total,omitempty"`
-	Infos       []string      `json:"infos,omitempty"`
-	Error       string        `json:"error,omitempty"`
-	Values      []SenderValue `json:"values,omitempty"`
+	At           time.Time        `json:"at"`
+	OK           bool             `json:"ok"`
+	Server       string           `json:"server"`
+	Port         int              `json:"port"`
+	TLS          string           `json:"tls"`
+	Host         string           `json:"host"`
+	LoggingLevel string           `json:"logging_level,omitempty"`
+	Debug        bool             `json:"debug,omitempty"`
+	ValuesCount  int              `json:"values_count"`
+	Chunks       int              `json:"chunks"`
+	Processed    int              `json:"processed,omitempty"`
+	Failed       int              `json:"failed,omitempty"`
+	Total        int              `json:"total,omitempty"`
+	Diagnostics  []string         `json:"diagnostics,omitempty"`
+	ChunkResults []SenderChunkLog `json:"chunk_results,omitempty"`
+	Infos        []string         `json:"infos,omitempty"`
+	Error        string           `json:"error,omitempty"`
+	Values       []SenderValue    `json:"values,omitempty"`
+}
+
+type SenderChunkLog struct {
+	Server       string  `json:"server"`
+	Port         int     `json:"port"`
+	Values       int     `json:"values"`
+	Response     string  `json:"response"`
+	Info         string  `json:"info"`
+	Processed    int     `json:"processed,omitempty"`
+	Failed       int     `json:"failed,omitempty"`
+	Total        int     `json:"total,omitempty"`
+	SecondsSpent float64 `json:"seconds_spent,omitempty"`
 }
 
 type senderRequest struct {
@@ -73,12 +90,15 @@ type senderResponse struct {
 }
 
 func SendSnapshot(ctx context.Context, cfg config.Config, snapshot collector.Snapshot) (SenderReport, error) {
+	debug := strings.EqualFold(strings.TrimSpace(cfg.Logging.Level), "debug")
 	entry := SenderLogEntry{
-		At:     time.Now(),
-		Server: cfg.Zabbix.Sender.Server,
-		Port:   cfg.Zabbix.Sender.Port,
-		TLS:    normalizedTLSMode(cfg.Zabbix.Sender.TLS),
-		Host:   cfg.Zabbix.Sender.Host,
+		At:           time.Now(),
+		Server:       cfg.Zabbix.Sender.Server,
+		Port:         cfg.Zabbix.Sender.Port,
+		TLS:          normalizedTLSMode(cfg.Zabbix.Sender.TLS),
+		Host:         cfg.Zabbix.Sender.Host,
+		LoggingLevel: cfg.Logging.Level,
+		Debug:        debug,
 	}
 	values, err := SnapshotSenderValues(cfg, snapshot)
 	if err != nil {
@@ -87,9 +107,10 @@ func SendSnapshot(ctx context.Context, cfg config.Config, snapshot collector.Sna
 		return SenderReport{}, err
 	}
 	entry.ValuesCount = len(values)
-	entry.Values = senderLogValues(values, 200)
+	entry.Values = senderLogValues(values, senderLogValueLimit(debug))
 	if len(values) == 0 {
 		entry.OK = true
+		entry.Diagnostics = senderDiagnostics(cfg, values, SenderReport{}, nil)
 		_ = AppendSenderLog(cfg.Paths.SenderLogFile, entry)
 		return SenderReport{}, nil
 	}
@@ -121,6 +142,8 @@ func SendSnapshot(ctx context.Context, cfg config.Config, snapshot collector.Sna
 	entry.Failed = report.Failed
 	entry.Total = report.Total
 	entry.Infos = report.Infos
+	entry.ChunkResults = report.ChunkResults
+	entry.Diagnostics = senderDiagnostics(cfg, values, report, err)
 	if err != nil {
 		entry.Error = err.Error()
 	}
@@ -220,6 +243,9 @@ func sendNative(ctx context.Context, cfg config.ZabbixSenderConfig, values []Sen
 			if result.Info != "" {
 				report.Infos = append(report.Infos, result.Info)
 			}
+			if hasSenderChunkLog(result.Log) {
+				report.ChunkResults = append(report.ChunkResults, result.Log)
+			}
 			if err != nil {
 				return report, err
 			}
@@ -242,6 +268,9 @@ func sendPSK(ctx context.Context, cfg config.ZabbixSenderConfig, values []Sender
 			if result.Info != "" {
 				report.Infos = append(report.Infos, result.Info)
 			}
+			if hasSenderChunkLog(result.Log) {
+				report.ChunkResults = append(report.ChunkResults, result.Log)
+			}
 			if err != nil {
 				return report, err
 			}
@@ -256,6 +285,11 @@ type senderChunkResult struct {
 	Failed       int
 	Total        int
 	SecondsSpent float64
+	Log          SenderChunkLog
+}
+
+func hasSenderChunkLog(log SenderChunkLog) bool {
+	return log.Values > 0 || log.Response != "" || log.Info != ""
 }
 
 func sendChunk(ctx context.Context, cfg config.ZabbixSenderConfig, server string, values []SenderValue, dial func(context.Context, config.ZabbixSenderConfig, string) (net.Conn, error)) (senderChunkResult, error) {
@@ -293,6 +327,17 @@ func sendChunk(ctx context.Context, cfg config.ZabbixSenderConfig, server string
 		return senderChunkResult{}, err
 	}
 	result := parseSenderInfo(response.Info)
+	result.Log = SenderChunkLog{
+		Server:       server,
+		Port:         cfg.Port,
+		Values:       len(values),
+		Response:     response.Response,
+		Info:         response.Info,
+		Processed:    result.Processed,
+		Failed:       result.Failed,
+		Total:        result.Total,
+		SecondsSpent: result.SecondsSpent,
+	}
 	if strings.ToLower(response.Response) != "success" {
 		return result, fmt.Errorf("zabbix sender response %q: %s", response.Response, response.Info)
 	}
@@ -491,6 +536,40 @@ func senderLogValues(values []SenderValue, limit int) []SenderValue {
 		return append([]SenderValue(nil), values...)
 	}
 	return append([]SenderValue(nil), values[:limit]...)
+}
+
+func senderLogValueLimit(debug bool) int {
+	if debug {
+		return 2000
+	}
+	return 200
+}
+
+func senderDiagnostics(cfg config.Config, values []SenderValue, report SenderReport, err error) []string {
+	var out []string
+	host := strings.TrimSpace(cfg.Zabbix.Sender.Host)
+	if host == "" && len(values) > 0 {
+		host = values[0].Host
+	}
+	if host != "" {
+		out = append(out, fmt.Sprintf("sent host: %s", host))
+	}
+	if len(values) > 0 {
+		out = append(out, fmt.Sprintf("first key: %s", values[0].Key))
+	}
+	if report.Failed > 0 {
+		out = append(out, fmt.Sprintf("zabbix rejected %d of %d values after successful connection and TLS handshake", report.Failed, report.Total))
+		out = append(out, "likely causes: Zabbix technical host name does not match sent host, sender template/trapper items are not linked to that host, or allowed hosts does not match the source IP seen by Zabbix")
+	}
+	if err != nil {
+		out = append(out, fmt.Sprintf("sender error: %s", err.Error()))
+	}
+	if len(report.ChunkResults) > 0 {
+		for i, chunk := range report.ChunkResults {
+			out = append(out, fmt.Sprintf("chunk %d response: response=%s info=%s", i+1, chunk.Response, chunk.Info))
+		}
+	}
+	return out
 }
 
 func normalizedTLSMode(value string) string {

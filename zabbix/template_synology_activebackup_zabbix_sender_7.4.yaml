@@ -12,7 +12,7 @@ zabbix_export:
       DSM package to Zabbix trapper items.
     vendor:
       name: pthoelken
-      version: 0.1.13
+      version: 0.1.15
     groups:
     - name: Templates/Synology
     items:
@@ -33,6 +33,13 @@ zabbix_export:
       - uuid: 7abf2d51f3c54c2c8f4d71b8e7df1201
         expression: last(/Template Synology Active Backup Zabbix Sender/synology.activebackup.health)=0
         name: 'Active Backup: Collector Fehler'
+        priority: HIGH
+        tags:
+        - tag: scope
+          value: availability
+      - uuid: 7abf2d51f3c54c2c8f4d71b8e7df1204
+        expression: nodata(/Template Synology Active Backup Zabbix Sender/synology.activebackup.health,{$ACTIVEBACKUP.NO_DATA_PERIOD})=1
+        name: 'Active Backup: Keine Werte empfangen'
         priority: HIGH
         tags:
         - tag: scope
@@ -325,6 +332,15 @@ zabbix_export:
         section_name: Thresholds
         label: Maximum backup age in hours
         regex: "^[0-9]+$"
+    - macro: "{$ACTIVEBACKUP.NO_DATA_PERIOD}"
+      value: 30m
+      description: Alarm period when no Active Backup values are received.
+      config:
+        type: TEXT
+        priority: '3'
+        section_name: Thresholds
+        label: No data alarm period
+        regex: "^[0-9]+[smhdw]$"
     dashboards:
     - uuid: 7abf2d51f3c54c2c8f4d71b8e7df4001
       name: Active Backup

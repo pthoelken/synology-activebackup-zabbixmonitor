@@ -108,6 +108,10 @@ For pull mode, import `zabbix/template_synology_activebackup_zabbix_7.4.yaml` in
 
 For active sender mode, import `zabbix/template_synology_activebackup_zabbix_sender_7.4.yaml`, link it to the same host, and set `{$ACTIVEBACKUP.SENDER.ALLOWED_HOSTS}` to the NAS address that connects to Zabbix if `{HOST.CONN}` is not that address.
 
+When sender mode uses TLS PSK, also enable encryption on the Zabbix host itself: open the host `Encryption` tab, allow `Connections from host` with `PSK`, and enter the same PSK identity and PSK value as in the DSM app. If this is missing, the sender connection can succeed but Zabbix rejects the submitted values.
+
+Both templates include a no-data trigger for `synology.activebackup.health`. By default it raises an alarm when no values are received for `30m`, which indicates that the DSM package, API, or sender flow is no longer delivering data.
+
 ## Build
 
 Install Go 1.22 or newer, then run:

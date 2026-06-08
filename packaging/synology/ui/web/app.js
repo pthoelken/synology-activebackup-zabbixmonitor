@@ -285,11 +285,43 @@ function renderSenderLog() {
         </div>
         ${entry.error ? `<div class="notice bad-text">${escapeHtml(entry.error)}</div>` : ""}
         ${Array.isArray(entry.infos) && entry.infos.length ? `<div class="notice">${entry.infos.map(escapeHtml).join("<br>")}</div>` : ""}
+        ${renderDiagnostics(entry)}
+        ${renderChunkResults(entry)}
         ${renderSenderValues(values)}
         ${total > shown ? `<div class="empty">Showing ${escapeHtml(shown)} of ${escapeHtml(total)} values</div>` : ""}
       </div>
     </details>`;
   }).join("")}</div>`;
+}
+
+function renderDiagnostics(entry) {
+  const diagnostics = Array.isArray(entry.diagnostics) ? entry.diagnostics : [];
+  if (!diagnostics.length) return "";
+  return `<div class="debug-block">
+    <div class="debug-title">Diagnostics${entry.debug ? " · debug" : ""}</div>
+    <ul>${diagnostics.map(function(item) {
+      return `<li class="mono">${escapeHtml(item)}</li>`;
+    }).join("")}</ul>
+  </div>`;
+}
+
+function renderChunkResults(entry) {
+  const chunks = Array.isArray(entry.chunk_results) ? entry.chunk_results : [];
+  if (!chunks.length) return "";
+  return `<table class="sender-chunks">
+    <thead><tr><th>Chunk</th><th>Target</th><th>Response</th><th>Processed</th><th>Failed</th><th>Total</th><th>Info</th></tr></thead>
+    <tbody>${chunks.map(function(chunk, index) {
+      return `<tr>
+        <td class="mono">${escapeHtml(index + 1)}</td>
+        <td class="mono">${escapeHtml(`${chunk.server || "-"}:${chunk.port || "-"}`)}</td>
+        <td class="mono">${escapeHtml(chunk.response || "-")}</td>
+        <td class="mono">${escapeHtml(chunk.processed || 0)}</td>
+        <td class="mono">${escapeHtml(chunk.failed || 0)}</td>
+        <td class="mono">${escapeHtml(chunk.total || chunk.values || 0)}</td>
+        <td class="mono">${escapeHtml(chunk.info || "")}</td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table>`;
 }
 
 function renderSenderValues(values) {

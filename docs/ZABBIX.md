@@ -14,7 +14,7 @@ Active sender mode:
 zabbix/template_synology_activebackup_zabbix_sender_7.4.yaml
 ```
 
-When replacing an older imported version, either delete the old template first or enable deletion of missing template elements during import. Version `0.1.13` keeps the API template and adds the sender/trapper template.
+When replacing an older imported version, either delete the old template first or enable deletion of missing template elements during import. Version `0.1.15` keeps the API template and adds the sender/trapper template.
 
 Template name:
 
@@ -66,12 +66,28 @@ For sender mode, configure the DSM app:
 - `Zabbix TLS`: `none`, `cert`, or `psk`
 - `PSK identity` and `PSK value`: only for `psk`
 
+For TLS PSK sender mode, configure encryption on the Zabbix host too: open the host `Encryption` tab, allow `Connections from host` with `PSK`, and enter the same PSK identity and PSK value as in the DSM app. Without this, Zabbix can accept the connection but reject all submitted trapper values.
+
 After saving sender settings, restart the DSM package. Normal operation sends automatically after each collection interval; the DSM app `Log` tab shows the last sender attempts and the values that were sent.
+
+Sender troubleshooting:
+
+- `response: success` with `processed: 0; failed: N; total: N` means the TCP/TLS/PSK connection worked, but Zabbix rejected the values.
+- Check that `Zabbix host name` in the DSM app is the technical Zabbix host name, not only the visible display name.
+- Check that the sender/trapper template is linked to that exact host.
+- Check that `{$ACTIVEBACKUP.SENDER.ALLOWED_HOSTS}` matches the source address Zabbix sees for the NAS.
+- With logging level `debug`, the DSM app `Log` tab shows diagnostics, chunk responses, and a larger sent-value preview. The package uses a Go sender implementation, so there is no external `zabbix_sender` binary output on DSM.
 
 Main threshold:
 
 ```text
 {$ACTIVEBACKUP.MAX_AGE_HOURS}=30
+```
+
+No-data threshold:
+
+```text
+{$ACTIVEBACKUP.NO_DATA_PERIOD}=30m
 ```
 
 Status value map:

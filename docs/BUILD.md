@@ -22,8 +22,8 @@ GitHub releases are created automatically for every push to `main` by `.github/w
 
 The build script creates:
 
-- `dist/synology-activebackup-zabbixmonitor-0.1.13-x86_64.spk`
-- `dist/synology-activebackup-zabbixmonitor-0.1.13-aarch64.spk`
+- `dist/synology-activebackup-zabbixmonitor-0.1.15-x86_64.spk`
+- `dist/synology-activebackup-zabbixmonitor-0.1.15-aarch64.spk`
 
 Set a release version with:
 
