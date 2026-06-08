@@ -1,0 +1,139 @@
+name: Bug report
+description: Report a reproducible problem with the DSM package, Zabbix integration, or templates.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        Please use GitHub issues for bug reports. Forum threads are useful for discussion, but bugs are tracked here so they do not get lost.
+
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      description: The installed Synology Active Backup Zabbix Monitor package version.
+      placeholder: "0.1.16"
+    validations:
+      required: true
+
+  - type: input
+    id: dsm-version
+    attributes:
+      label: DSM version
+      description: Your Synology DSM version and build number.
+      placeholder: "DSM 7.2.2-72806"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: NAS architecture
+      options:
+        - x86_64
+        - aarch64
+        - Unknown
+    validations:
+      required: true
+
+  - type: input
+    id: zabbix-version
+    attributes:
+      label: Zabbix version
+      description: Zabbix server or proxy version.
+      placeholder: "7.4.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: zabbix-mode
+    attributes:
+      label: Zabbix mode
+      options:
+        - Sender push
+        - API pull
+        - Both
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: sender-tls
+    attributes:
+      label: Sender TLS mode
+      description: Only relevant when sender mode is used.
+      options:
+        - Not using sender mode
+        - None
+        - Certificate
+        - PSK
+        - Not sure
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: products
+    attributes:
+      label: Active Backup products
+      options:
+        - label: Active Backup for Business
+        - label: Active Backup for Microsoft 365
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem summary
+      description: What happened?
+      placeholder: "The package starts, but no values arrive in Zabbix..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps needed to reproduce the problem.
+      placeholder: |
+        1. Install SPK version ...
+        2. Configure sender mode with ...
+        3. Import template ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs and diagnostics
+      description: Paste DSM app Log tab output, sender diagnostics, Zabbix latest data errors, or package logs. Remove secrets before posting.
+      render: text
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Attach screenshots if they help explain the issue.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues.
+          required: true
+        - label: I have removed API tokens, PSK values, and other secrets from logs and screenshots.
+          required: true
+        - label: If I use TLS PSK sender mode, I enabled PSK encryption on the Zabbix host under the host Encryption tab.
+          required: false

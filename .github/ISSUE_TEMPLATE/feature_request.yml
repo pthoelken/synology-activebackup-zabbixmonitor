@@ -1,0 +1,79 @@
+name: Feature request
+description: Suggest an improvement or new capability.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement.
+
+        Please use GitHub issues for feature requests. Forum posts are easy to miss, while GitHub keeps requests trackable.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem would this feature solve?
+      placeholder: "I would like to monitor ... because ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the feature you would like to see.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - DSM package
+        - DSM desktop app
+        - Zabbix sender mode
+        - Zabbix API pull mode
+        - Zabbix templates
+        - Active Backup for Business collection
+        - Active Backup for Microsoft 365 collection
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Nice to have
+        - Important for my setup
+        - Blocking production use
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you tried another approach or workaround?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add screenshots, examples, Zabbix item ideas, or Synology database details if relevant.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and feature requests.
+          required: true
+        - label: I understand that implementation depends on available Synology data and maintainer time.
+          required: true

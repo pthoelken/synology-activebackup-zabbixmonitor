@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Releases and downloads
+    url: https://github.com/pthoelken/synology-activebackup-zabbixmonitor/releases
+    about: Download the latest SPK builds from GitHub Releases.
+  - name: Documentation
+    url: https://github.com/pthoelken/synology-activebackup-zabbixmonitor#quick-start
+    about: Read the quick start guide before opening an issue.
