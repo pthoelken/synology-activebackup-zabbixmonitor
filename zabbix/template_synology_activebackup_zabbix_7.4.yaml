@@ -11,7 +11,7 @@ zabbix_export:
         Monitors Synology Active Backup for Business and Active Backup for Microsoft 365 via the synology-activebackup-zabbix DSM package.
       vendor:
         name: pthoelken
-        version: 0.1.15
+        version: 0.1.16
       groups:
         - name: Templates/Synology
       items:
@@ -37,14 +37,14 @@ zabbix_export:
           triggers:
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1201
               expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.health)=0'
-              name: 'Active Backup: Collector Fehler'
+              name: 'Active Backup: Collector error'
               priority: HIGH
               tags:
                 - tag: scope
                   value: availability
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1204
               expression: 'nodata(/Template Synology Active Backup Zabbix/synology.activebackup.health,{$ACTIVEBACKUP.NO_DATA_PERIOD})=1'
-              name: 'Active Backup: Keine Werte empfangen'
+              name: 'Active Backup: No values received'
               priority: HIGH
               tags:
                 - tag: scope
@@ -88,7 +88,7 @@ zabbix_export:
           triggers:
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1202
               expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.product.db_missing[abb])=1'
-              name: 'Active Backup for Business: Datenbank nicht gefunden'
+              name: 'Active Backup for Business: Database not found'
               priority: HIGH
               tags:
                 - tag: scope
@@ -115,7 +115,7 @@ zabbix_export:
           triggers:
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1203
               expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.product.db_missing[m365])=1'
-              name: 'Active Backup for Microsoft 365: Datenbank nicht gefunden'
+              name: 'Active Backup for Microsoft 365: Database not found'
               priority: HIGH
               tags:
                 - tag: scope
@@ -364,28 +364,28 @@ zabbix_export:
           trigger_prototypes:
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2201
               expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=6 or last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=10'
-              name: 'Backup fehlgeschlagen: [{#PRODUCT}] {#JOBNAME}'
+              name: 'Backup failed: [{#PRODUCT}] {#JOBNAME}'
               priority: HIGH
               tags:
                 - tag: scope
                   value: availability
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2204
               expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=2'
-              name: 'Backup Warnung: [{#PRODUCT}] {#JOBNAME}'
+              name: 'Backup warning: [{#PRODUCT}] {#JOBNAME}'
               priority: WARNING
               tags:
                 - tag: scope
                   value: availability
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2202
               expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}])>{$ACTIVEBACKUP.MAX_AGE_HOURS}*3600'
-              name: 'Backup zu alt: [{#PRODUCT}] {#JOBNAME}'
+              name: 'Backup too old: [{#PRODUCT}] {#JOBNAME}'
               priority: WARNING
               tags:
                 - tag: scope
                   value: capacity
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2203
               expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=8 or nodata(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}],15m)=1'
-              name: 'Keine Laufdaten vorhanden: [{#PRODUCT}] {#JOBNAME}'
+              name: 'No runtime data available: [{#PRODUCT}] {#JOBNAME}'
               priority: WARNING
               tags:
                 - tag: scope
@@ -497,7 +497,7 @@ zabbix_export:
                       name: reference
                       value: SABTJ
                 - type: item
-                  name: 'Backup age je Job'
+                  name: 'Backup age per job'
                   x: '0'
                   'y': '4'
                   width: '36'
@@ -512,7 +512,7 @@ zabbix_export:
                       name: reference
                       value: SABAJ
                 - type: item
-                  name: 'Letzter Lauf je Job'
+                  name: 'Last run per job'
                   x: '36'
                   'y': '4'
                   width: '36'

@@ -14,7 +14,7 @@ Active sender mode:
 zabbix/template_synology_activebackup_zabbix_sender_7.4.yaml
 ```
 
-When replacing an older imported version, either delete the old template first or enable deletion of missing template elements during import. Version `0.1.15` keeps the API template and adds the sender/trapper template.
+When replacing an older imported version, either delete the old template first or enable deletion of missing template elements during import. Version `0.1.16` keeps the API template and adds the sender/trapper template.
 
 Template name:
 

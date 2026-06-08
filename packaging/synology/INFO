@@ -1,6 +1,6 @@
 package="synology-activebackup-zabbix"
 displayname="Synology Active Backup Zabbix Monitor"
-version="0.1.15"
+version="0.1.16"
 arch="x86_64 aarch64"
 maintainer="Patrick Thoelken"
 maintainer_url="https://github.com/pthoelken"

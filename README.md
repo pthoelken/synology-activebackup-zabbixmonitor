@@ -1,5 +1,17 @@
 # synology-activebackup-zabbixmonitor
 
+## Quick Start
+
+1. Build or download the SPK for your NAS architecture and install it through DSM Package Center with `Manual Install`.
+2. Start the package and open the DSM desktop app `Active Backup Zabbix`.
+3. Choose a Zabbix mode in `Config`.
+   - `Sender push` is recommended when the NAS should send values to Zabbix and the package API should stay local.
+   - `API pull` is useful when Zabbix should collect values from the NAS API.
+4. For `Sender push`, import `zabbix/template_synology_activebackup_zabbix_sender_7.4.yaml`, link it to the Zabbix host, set the exact technical Zabbix host name in the DSM app, and configure the Zabbix server or proxy address.
+5. If sender mode uses TLS PSK, enable PSK encryption on the Zabbix host under `Encryption` and enter the same PSK identity and PSK value as in the DSM app.
+6. For `API pull`, import `zabbix/template_synology_activebackup_zabbix_7.4.yaml`, link it to the Zabbix host, and set `{$ACTIVEBACKUP.API.URL}` plus `{$ACTIVEBACKUP.API.TOKEN}`.
+7. Save the DSM app config, restart the package from Package Center when the UI asks for it, and check the DSM app `Log` tab plus Zabbix `Latest data`.
+
 DSM 7 package project for monitoring Synology Active Backup for Business and Active Backup for Microsoft 365 with Zabbix 7.4.
 
 The collector is implemented in Go because the package needs a long-running daemon, a CLI, structured JSON cache output, and cross-architecture builds for DSM. A single Go binary keeps DSM packaging simpler than a multi-script solution and avoids requiring Python, Node.js, or shell-only parsing on the NAS.
