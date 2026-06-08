@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Active Backup Zabbix</title>
+  <link rel="stylesheet" href="style.css?v=0.1.13">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Active Backup Zabbix</h1>
+    <button id="refresh" type="button">Refresh</button>
+  </header>
+  <main>
+    <nav class="tabs" aria-label="Views">
+      <button class="active" type="button" data-tab="overview">Overview</button>
+      <button type="button" data-tab="jobs">Jobs</button>
+      <button type="button" data-tab="sources">Sources</button>
+      <button type="button" data-tab="log">Log</button>
+      <button type="button" data-tab="config">Config</button>
+    </nav>
+
+    <section id="overview">
+      <div class="metrics">
+        <div class="metric">
+          <span>Health</span>
+          <strong id="health">-</strong>
+        </div>
+        <div class="metric">
+          <span>Jobs</span>
+          <strong id="jobCount">0</strong>
+        </div>
+        <div class="metric">
+          <span>Sources</span>
+          <strong id="sourceCount">0</strong>
+        </div>
+        <div class="metric">
+          <span>Collected</span>
+          <strong id="collected">-</strong>
+        </div>
+      </div>
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Errors</h2>
+        </div>
+        <div id="errors" class="panel-body"></div>
+      </article>
+    </section>
+
+    <section id="jobs" class="hidden">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Jobs</h2>
+        </div>
+        <div id="jobsTable" class="panel-body"></div>
+      </article>
+    </section>
+
+    <section id="sources" class="hidden">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Sources</h2>
+        </div>
+        <div id="sourcesTable" class="panel-body"></div>
+      </article>
+    </section>
+
+    <section id="config" class="hidden">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Config</h2>
+        </div>
+        <div id="configView" class="panel-body"></div>
+      </article>
+    </section>
+
+    <section id="log" class="hidden">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Sender Log</h2>
+        </div>
+        <div id="senderLogView" class="panel-body"></div>
+      </article>
+    </section>
+  </main>
+  <script src="app.js?v=0.1.13"></script>
+</body>
+</html>

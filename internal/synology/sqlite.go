@@ -33,15 +33,7 @@ func OpenSQLiteReadOnly(path string) (*sql.DB, error) {
 }
 
 func openSQLite(path string, immutable bool) (*sql.DB, error) {
-	u := url.URL{Scheme: "file", Path: path}
-	q := u.Query()
-	q.Set("mode", "ro")
-	q.Set("_pragma", "busy_timeout(1000)")
-	if immutable {
-		q.Set("immutable", "1")
-	}
-	u.RawQuery = q.Encode()
-	db, err := sql.Open("sqlite", u.String())
+	db, err := sql.Open("sqlite", SQLiteURI(path, true, immutable))
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +44,34 @@ func openSQLite(path string, immutable bool) (*sql.DB, error) {
 	return db, nil
 }
 
+func SQLiteURI(path string, readOnly bool, immutable bool) string {
+	u := url.URL{Scheme: "file", Path: path}
+	q := u.Query()
+	if readOnly {
+		q.Set("mode", "ro")
+	}
+	q.Set("_pragma", "busy_timeout(1000)")
+	if immutable {
+		q.Set("immutable", "1")
+	}
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
+func SQLString(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
+}
+
 func ListTables(db *sql.DB) ([]TableInfo, error) {
-	rows, err := db.Query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+	return ListTablesInSchema(db, "")
+}
+
+func ListTablesInSchema(db *sql.DB, schema string) ([]TableInfo, error) {
+	master := "sqlite_master"
+	if schema != "" {
+		master = QuoteIdent(schema) + ".sqlite_master"
+	}
+	rows, err := db.Query("SELECT name FROM " + master + " WHERE type='table' ORDER BY name")
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +83,7 @@ func ListTables(db *sql.DB) ([]TableInfo, error) {
 		if err := rows.Scan(&name); err != nil {
 			return nil, err
 		}
-		columns, err := ListColumns(db, name)
+		columns, err := ListColumnsInSchema(db, schema, name)
 		if err != nil {
 			continue
 		}
@@ -78,7 +96,16 @@ func ListTables(db *sql.DB) ([]TableInfo, error) {
 }
 
 func ListColumns(db *sql.DB, table string) ([]ColumnInfo, error) {
-	rows, err := db.Query("PRAGMA table_info(" + QuoteIdent(table) + ")")
+	return ListColumnsInSchema(db, "", table)
+}
+
+func ListColumnsInSchema(db *sql.DB, schema string, table string) ([]ColumnInfo, error) {
+	pragma := "PRAGMA "
+	if schema != "" {
+		pragma += QuoteIdent(schema) + "."
+	}
+	pragma += "table_info(" + QuoteIdent(table) + ")"
+	rows, err := db.Query(pragma)
 	if err != nil {
 		return nil, err
 	}

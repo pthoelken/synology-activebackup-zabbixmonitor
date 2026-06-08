@@ -2,7 +2,7 @@
 set -eu
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
-VERSION="${VERSION:-0.1.0}"
+VERSION="${VERSION:-0.1.13}"
 DIST_DIR="${ROOT_DIR}/dist"
 BUILD_DIR="${ROOT_DIR}/build/spk"
 PACKAGE_NAME="synology-activebackup-zabbix"
@@ -29,16 +29,23 @@ build_one() {
     "${ROOT_DIR}/cmd/synology-activebackup-zabbix"
 
   cp "${ROOT_DIR}/packaging/synology/templates/config.yml" "${PACKAGE_DIR}/etc/config.yml"
-  cp "${ROOT_DIR}/zabbix/template_synology_activebackup_zabbix_7.4.yaml" "${PACKAGE_DIR}/zabbix/template_synology_activebackup_zabbix_7.4.yaml"
+  cp "${ROOT_DIR}/zabbix/"*.yaml "${PACKAGE_DIR}/zabbix/"
   cp "${ROOT_DIR}/README.md" "${PACKAGE_DIR}/docs/README.md"
   cp "${ROOT_DIR}/docs/"*.md "${PACKAGE_DIR}/docs/"
+  cp -R "${ROOT_DIR}/packaging/synology/ui" "${PACKAGE_DIR}/ui"
+  rm -rf "${PACKAGE_DIR}/ui/web/data"
+  chmod 755 "${PACKAGE_DIR}/ui/api.cgi"
 
   tar -C "${PACKAGE_DIR}" -czf "${SPK_DIR}/package.tgz" .
   sed -e "s/^version=.*/version=\"${VERSION}\"/" -e "s/^arch=.*/arch=\"${SYNO_ARCH}\"/" \
     "${ROOT_DIR}/packaging/synology/INFO" >"${SPK_DIR}/INFO"
   cp -R "${ROOT_DIR}/packaging/synology/scripts" "${SPK_DIR}/scripts"
+  cp -R "${ROOT_DIR}/packaging/synology/conf" "${SPK_DIR}/conf"
+  cp -R "${ROOT_DIR}/packaging/synology/WIZARD_UIFILES" "${SPK_DIR}/WIZARD_UIFILES"
+  cp "${ROOT_DIR}/packaging/synology/PACKAGE_ICON.PNG" "${SPK_DIR}/PACKAGE_ICON.PNG"
+  cp "${ROOT_DIR}/packaging/synology/PACKAGE_ICON_256.PNG" "${SPK_DIR}/PACKAGE_ICON_256.PNG"
   chmod 755 "${SPK_DIR}/scripts/"*
-  tar -C "${SPK_DIR}" -cf "${OUT_FILE}" INFO package.tgz scripts
+  tar -C "${SPK_DIR}" -cf "${OUT_FILE}" INFO package.tgz scripts conf WIZARD_UIFILES PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG
   echo "${OUT_FILE}"
 }
 

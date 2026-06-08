@@ -11,13 +11,20 @@ zabbix_export:
         Monitors Synology Active Backup for Business and Active Backup for Microsoft 365 via the synology-activebackup-zabbix DSM package.
       vendor:
         name: pthoelken
-        version: 0.1.0
+        version: 0.1.13
       groups:
         - name: Templates/Synology
       items:
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1101
           name: 'Active Backup collector health'
+          type: HTTP_AGENT
           key: synology.activebackup.health
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/health?field=ok'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 30d
           trends: 365d
@@ -37,7 +44,14 @@ zabbix_export:
                   value: availability
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1102
           name: 'Active Backup collector health JSON'
+          type: HTTP_AGENT
           key: synology.activebackup.health.json
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/health?field=json'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 7d
           trends: '0'
@@ -47,7 +61,14 @@ zabbix_export:
               value: collector
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1103
           name: 'Active Backup for Business database missing'
+          type: HTTP_AGENT
           key: 'synology.activebackup.product.db_missing[abb]'
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/health?field=db_missing&product=abb'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 30d
           trends: 365d
@@ -67,7 +88,14 @@ zabbix_export:
                   value: availability
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1104
           name: 'Active Backup for Microsoft 365 database missing'
+          type: HTTP_AGENT
           key: 'synology.activebackup.product.db_missing[m365]'
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/health?field=db_missing&product=m365'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 30d
           trends: 365d
@@ -87,7 +115,14 @@ zabbix_export:
                   value: availability
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1105
           name: 'Active Backup successful jobs'
+          type: HTTP_AGENT
           key: synology.activebackup.jobs.successful
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/summary?field=successful'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 30d
           trends: 365d
@@ -97,7 +132,14 @@ zabbix_export:
               value: summary
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1106
           name: 'Active Backup failed jobs'
+          type: HTTP_AGENT
           key: synology.activebackup.jobs.failed
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/summary?field=failed'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 30d
           trends: 365d
@@ -107,7 +149,14 @@ zabbix_export:
               value: summary
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1107
           name: 'Active Backup jobs with warning or error'
+          type: HTTP_AGENT
           key: synology.activebackup.jobs.problem
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/summary?field=problem'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 30d
           trends: 365d
@@ -117,7 +166,14 @@ zabbix_export:
               value: summary
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf1108
           name: 'Active Backup total jobs'
+          type: HTTP_AGENT
           key: synology.activebackup.jobs.total
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/summary?field=total'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           history: 30d
           trends: 365d
@@ -127,14 +183,28 @@ zabbix_export:
               value: summary
       discovery_rules:
         - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2001
-          name: 'Active Backup for Business Discovery'
-          key: 'synology.activebackup.discovery[abb]'
+          name: 'Active Backup Discovery'
+          type: HTTP_AGENT
+          key: synology.activebackup.discovery
+          url: '{$ACTIVEBACKUP.API.URL}/api/v1/discovery'
+          headers:
+            - name: Authorization
+              value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+          timeout: 10s
+          status_codes: '200'
           delay: 5m
           lifetime: 7d
           item_prototypes:
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2101
               name: 'Backup status [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.status[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=status'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 30d
               trends: 365d
@@ -148,7 +218,14 @@ zabbix_export:
                   value: '{#PRODUCT}'
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2102
               name: 'Backup age [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.age[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=age'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 30d
               trends: 365d
@@ -161,7 +238,14 @@ zabbix_export:
                   value: '{#PRODUCT}'
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2103
               name: 'Backup last successful age [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=last_success_age'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 30d
               trends: 365d
@@ -174,7 +258,14 @@ zabbix_export:
                   value: '{#PRODUCT}'
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2104
               name: 'Backup error code [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.error[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=error'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 30d
               trends: '0'
@@ -186,7 +277,14 @@ zabbix_export:
                   value: '{#PRODUCT}'
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2105
               name: 'Backup runtime [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.runtime[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=runtime'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 30d
               trends: 365d
@@ -199,7 +297,14 @@ zabbix_export:
                   value: '{#PRODUCT}'
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2106
               name: 'Backup transferred size [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.transferred_size[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=transferred_size'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 30d
               trends: 365d
@@ -212,7 +317,14 @@ zabbix_export:
                   value: '{#PRODUCT}'
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2107
               name: 'Backup last end time [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.last_end_time[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=last_end_time'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 30d
               trends: 365d
@@ -225,7 +337,14 @@ zabbix_export:
                   value: '{#PRODUCT}'
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2108
               name: 'Backup info [{#PRODUCT}] {#JOBNAME}'
+              type: HTTP_AGENT
               key: 'synology.activebackup.job.info[{#PRODUCT},{#TASKID}]'
+              url: '{$ACTIVEBACKUP.API.URL}/api/v1/job?product={#PRODUCT}&task_id={#TASKID}&field=info'
+              headers:
+                - name: Authorization
+                  value: 'Bearer {$ACTIVEBACKUP.API.TOKEN}'
+              timeout: 10s
+              status_codes: '200'
               delay: 5m
               history: 7d
               trends: '0'
@@ -237,9 +356,16 @@ zabbix_export:
                   value: '{#PRODUCT}'
           trigger_prototypes:
             - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2201
-              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>1 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>8 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>9'
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=6 or last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=10'
               name: 'Backup fehlgeschlagen: [{#PRODUCT}] {#JOBNAME}'
               priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf2204
+              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=2'
+              name: 'Backup Warnung: [{#PRODUCT}] {#JOBNAME}'
+              priority: WARNING
               tags:
                 - tag: scope
                   value: availability
@@ -257,149 +383,34 @@ zabbix_export:
               tags:
                 - tag: scope
                   value: availability
-        - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3001
-          name: 'Active Backup for Microsoft 365 Discovery'
-          key: 'synology.activebackup.discovery[m365]'
-          delay: 5m
-          lifetime: 7d
-          item_prototypes:
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3101
-              name: 'Backup status [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.status[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 30d
-              trends: 365d
-              value_type: UNSIGNED
-              valuemap:
-                name: 'Active Backup Status'
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3102
-              name: 'Backup age [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.age[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 30d
-              trends: 365d
-              value_type: UNSIGNED
-              units: s
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3103
-              name: 'Backup last successful age [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 30d
-              trends: 365d
-              value_type: UNSIGNED
-              units: s
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3104
-              name: 'Backup error code [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.error[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 30d
-              trends: '0'
-              value_type: TEXT
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3105
-              name: 'Backup runtime [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.runtime[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 30d
-              trends: 365d
-              value_type: UNSIGNED
-              units: s
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3106
-              name: 'Backup transferred size [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.transferred_size[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 30d
-              trends: 365d
-              value_type: UNSIGNED
-              units: B
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3107
-              name: 'Backup last end time [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.last_end_time[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 30d
-              trends: 365d
-              value_type: UNSIGNED
-              units: unixtime
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3108
-              name: 'Backup info [{#PRODUCT}] {#JOBNAME}'
-              key: 'synology.activebackup.job.info[{#PRODUCT},{#TASKID}]'
-              delay: 5m
-              history: 7d
-              trends: '0'
-              value_type: TEXT
-              tags:
-                - tag: component
-                  value: backup
-                - tag: product
-                  value: '{#PRODUCT}'
-          trigger_prototypes:
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3201
-              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>1 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>8 and last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])<>9'
-              name: 'Backup fehlgeschlagen: [{#PRODUCT}] {#JOBNAME}'
-              priority: HIGH
-              tags:
-                - tag: scope
-                  value: availability
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3202
-              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.last_success_age[{#PRODUCT},{#TASKID}])>{$ACTIVEBACKUP.MAX_AGE_HOURS}*3600'
-              name: 'Backup zu alt: [{#PRODUCT}] {#JOBNAME}'
-              priority: WARNING
-              tags:
-                - tag: scope
-                  value: capacity
-            - uuid: 7abf2d51f3c54c2c8f4d71b8e7cf3203
-              expression: 'last(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}])=8 or nodata(/Template Synology Active Backup Zabbix/synology.activebackup.job.status[{#PRODUCT},{#TASKID}],15m)=1'
-              name: 'Keine Laufdaten vorhanden: [{#PRODUCT}] {#JOBNAME}'
-              priority: WARNING
-              tags:
-                - tag: scope
-                  value: availability
       tags:
         - tag: class
           value: backup
         - tag: target
           value: synology
       macros:
+        - macro: '{$ACTIVEBACKUP.API.URL}'
+          value: 'http://{HOST.CONN}:9876'
+          description: 'Base URL of the synology-activebackup-zabbix API, for example http://nas.example.com:9876.'
+          config:
+            type: TEXT
+            priority: '1'
+            section_name: API
+            label: 'API base URL'
+        - macro: '{$ACTIVEBACKUP.API.TOKEN}'
+          value: CHANGE_ME
+          description: 'Bearer token configured in the DSM package.'
+          config:
+            type: TEXT
+            priority: '2'
+            section_name: API
+            label: 'API bearer token'
         - macro: '{$ACTIVEBACKUP.MAX_AGE_HOURS}'
           value: '30'
           description: 'Maximum age in hours for the last successful backup run.'
           config:
             type: TEXT
-            priority: '1'
+            priority: '3'
             section_name: Thresholds
             label: 'Maximum backup age in hours'
             regex: '^[0-9]+$'
@@ -505,6 +516,10 @@ zabbix_export:
           mappings:
             - value: '1'
               newvalue: OK
+            - value: '2'
+              newvalue: Warning
+            - value: '3'
+              newvalue: Running
             - value: '6'
               newvalue: Failed
             - value: '8'

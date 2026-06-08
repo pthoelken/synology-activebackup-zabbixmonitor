@@ -1,0 +1,71 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build SPK and create GitHub release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Test
+        run: go test ./...
+
+      - name: Check DSM app JavaScript
+        run: node --check packaging/synology/ui/web/app.js
+
+      - name: Validate Zabbix templates
+        run: ruby -ryaml -e 'Dir["zabbix/*.yaml"].sort.each { |path| YAML.load_file(path); puts "yaml ok #{path}" }'
+
+      - name: Read package version
+        id: version
+        run: |
+          version="$(awk '/^VERSION \?=/{print $3; exit}' Makefile)"
+          short_sha="${GITHUB_SHA::7}"
+          echo "version=${version}" >>"${GITHUB_OUTPUT}"
+          echo "tag=v${version}-${short_sha}-${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >>"${GITHUB_OUTPUT}"
+
+      - name: Build SPKs
+        run: make spk VERSION="${{ steps.version.outputs.version }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: synology-activebackup-zabbixmonitor-${{ steps.version.outputs.version }}
+          path: dist/*.spk
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          x86="dist/synology-activebackup-zabbixmonitor-${VERSION}-x86_64.spk"
+          arm="dist/synology-activebackup-zabbixmonitor-${VERSION}-aarch64.spk"
+          gh release create "${TAG}" \
+            "${x86}#SPK x86_64" \
+            "${arm}#SPK aarch64" \
+            --target "${GITHUB_SHA}" \
+            --title "Synology Active Backup Zabbix Monitor ${TAG}" \
+            --notes "Automated SPK release for commit ${GITHUB_SHA}." \
+            --generate-notes \
+            --latest

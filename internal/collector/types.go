@@ -1,12 +1,17 @@
 package collector
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 const (
 	ProductABB  = "abb"
 	ProductM365 = "m365"
 
 	StatusOK        = 1
+	StatusWarning   = 2
+	StatusRunning   = 3
 	StatusFailed    = 6
 	StatusNoData    = 8
 	StatusDBMissing = 9
@@ -66,15 +71,38 @@ type Result struct {
 }
 
 func StatusFromRaw(product string, raw string) int {
+	raw = strings.TrimSpace(strings.ToLower(raw))
 	switch product {
-	case ProductM365:
-		if raw == "1" {
+	case ProductABB:
+		switch raw {
+		case "2", "successful", "success", "succeeded", "ok", "completed", "complete", "finished", "done":
 			return StatusOK
-		}
-		if raw == "6" {
+		case "1", "3", "5", "incomplete", "partial successful", "partial_successful", "partial", "canceled", "cancelled":
+			return StatusWarning
+		case "4", "failed", "failure", "error", "aborted":
 			return StatusFailed
+		case "running", "in_progress", "processing":
+			return StatusRunning
+		case "", "0", "none":
+			return StatusNoData
+		default:
+			return StatusUnknown
 		}
-		return StatusUnknown
+	case ProductM365:
+		switch raw {
+		case "1", "successful", "success", "succeeded", "ok", "completed", "complete", "finished", "done":
+			return StatusOK
+		case "6", "warning", "partial", "partial successful", "partial_successful", "skipped", "completed with skipped items":
+			return StatusWarning
+		case "4", "failed", "failure", "error", "aborted", "cancelled", "canceled":
+			return StatusFailed
+		case "running", "in_progress", "processing", "preparing":
+			return StatusRunning
+		case "", "0", "none":
+			return StatusNoData
+		default:
+			return StatusUnknown
+		}
 	default:
 		switch raw {
 		case "1", "success", "succeeded", "successful", "ok", "completed", "complete", "finished", "done":
@@ -91,6 +119,10 @@ func StatusName(status int) string {
 	switch status {
 	case StatusOK:
 		return "OK"
+	case StatusWarning:
+		return "Warning"
+	case StatusRunning:
+		return "Running"
 	case StatusFailed:
 		return "Failed"
 	case StatusNoData:

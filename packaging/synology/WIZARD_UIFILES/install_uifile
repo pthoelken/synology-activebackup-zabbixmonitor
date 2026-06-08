@@ -1,0 +1,30 @@
+[{
+  "step_title": "Active Backup Zabbix API",
+  "items": [{
+    "type": "textfield",
+    "desc": "API listener",
+    "subitems": [{
+      "key": "pkgwizard_api_bind",
+      "desc": "Bind address",
+      "defaultValue": "0.0.0.0",
+      "allowBlank": false
+    }, {
+      "key": "pkgwizard_api_port",
+      "desc": "Port",
+      "defaultValue": "9876",
+      "allowBlank": false,
+      "validator": {
+        "fn": "{var v=arguments[0]; if (!/^[0-9]+$/.test(v)) return 'Enter a TCP port.'; v=parseInt(v,10); if (v < 1 || v > 65535) return 'Enter a TCP port between 1 and 65535.'; return true;}"
+      }
+    }]
+  }, {
+    "type": "password",
+    "desc": "Bearer token for the Zabbix HTTP template",
+    "subitems": [{
+      "key": "pkgwizard_api_token",
+      "desc": "API token",
+      "allowBlank": false,
+      "minLength": 16
+    }]
+  }]
+}]

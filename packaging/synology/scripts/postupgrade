@@ -1,0 +1,21 @@
+#!/bin/sh
+
+PKG_NAME="synology-activebackup-zabbix"
+PKG_ROOT="/var/packages/${PKG_NAME}"
+PKG_TARGET="${SYNOPKG_PKGDEST:-${PKG_ROOT}/target}"
+CONFIG_FILE="${PKG_ROOT}/etc/config.yml"
+BIN="${PKG_TARGET}/bin/synology-activebackup-zabbix"
+
+rm -f "${PKG_TARGET}/ui/index.html" "${PKG_TARGET}/ui/app.js" "${PKG_TARGET}/ui/style.css"
+rm -rf "${PKG_TARGET}/ui/data"
+rm -rf "${PKG_TARGET}/ui/web/data"
+
+if [ -x "${PKG_TARGET}/ui/api.cgi" ]; then
+  chmod 755 "${PKG_TARGET}/ui/api.cgi"
+fi
+
+if [ -x "${BIN}" ]; then
+  "${BIN}" --config "${CONFIG_FILE}" configure >/dev/null 2>&1 || true
+fi
+
+exit 0

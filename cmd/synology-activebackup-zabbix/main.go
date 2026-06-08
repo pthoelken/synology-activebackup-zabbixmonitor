@@ -6,25 +6,25 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/abb"
+	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/apiserver"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/collector"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/config"
-	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/httpserver"
+	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/dsmcgi"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/logging"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/m365"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/zabbix"
 )
 
-var version = "0.1.0"
+var version = "0.1.13"
 
 func main() {
 	os.Exit(run(os.Args[1:]))
@@ -78,8 +78,12 @@ func run(args []string) int {
 		return cmdDetect(rest, cfg, logger)
 	case "collect":
 		return cmdCollect(rest, cfg, logger)
-	case "install-userparameter":
-		return cmdInstallUserParameter(rest, cfg, *configPath)
+	case "send":
+		return cmdSend(rest, cfg, logger)
+	case "configure":
+		return cmdConfigure(rest, cfg, *configPath)
+	case "dsm-cgi":
+		return dsmcgi.Run(cfg)
 	case "write-default-config":
 		if err := config.WriteDefault(*configPath); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -94,7 +98,7 @@ func run(args []string) int {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: synology-activebackup-zabbix [--config path] <service|discovery|status|job|health|summary|detect|collect|install-userparameter>")
+	fmt.Fprintln(os.Stderr, "usage: synology-activebackup-zabbix [--config path] <service|discovery|status|job|health|summary|detect|collect|send|configure|dsm-cgi>")
 }
 
 func runService(cfg config.Config, configPath string) int {
@@ -117,44 +121,22 @@ func runService(cfg config.Config, configPath string) int {
 		store.Set(snapshot)
 	}
 
-	if cfg.Zabbix.Mode == "agent" {
-		binaryPath, err := os.Executable()
-		if err != nil {
-			binaryPath = filepath.Join(cfg.Paths.PackageRoot, "target/bin", config.BinaryName)
-		}
-		if err := zabbix.WriteUserParameter(cfg.Zabbix.UserParameterFile, binaryPath, configPath); err != nil {
-			logger.Warn("could not write zabbix userparameter file", "error", err)
-		}
-	}
-
-	var httpSrv *http.Server
-	if cfg.HTTP.Enabled {
-		addr := fmt.Sprintf("%s:%d", cfg.HTTP.Bind, cfg.HTTP.Port)
-		httpSrv = &http.Server{
-			Addr:              addr,
-			Handler:           httpserver.New(store).Handler(),
-			ReadHeaderTimeout: 5 * time.Second,
-		}
+	collectAndStore(ctx, cfg, store, logger)
+	if cfg.API.Enabled {
+		api := apiserver.New(cfg, configPath, store, logger)
 		go func() {
-			logger.Info("http server starting", "addr", addr)
-			if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				logger.Error("http server failed", "error", err)
+			if err := api.ListenAndServe(ctx); err != nil {
+				logger.Error("api server stopped", "error", err)
+				stop()
 			}
 		}()
 	}
-
-	collectAndStore(ctx, cfg, store, logger)
 	ticker := time.NewTicker(time.Duration(cfg.Collector.IntervalSeconds) * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			if httpSrv != nil {
-				shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-				_ = httpSrv.Shutdown(shutdownCtx)
-				cancel()
-			}
 			logger.Info("service stopped")
 			return 0
 		case <-ticker.C:
@@ -169,6 +151,14 @@ func collectAndStore(ctx context.Context, cfg config.Config, store *collector.St
 		logger.Error("could not write cache", "error", err)
 	}
 	store.Set(snapshot)
+	if strings.EqualFold(cfg.Zabbix.Mode, "sender") {
+		report, err := zabbix.SendSnapshot(ctx, cfg, snapshot)
+		if err != nil {
+			logger.Error("zabbix sender failed", "error", err)
+		} else if report.Values > 0 {
+			logger.Info("zabbix sender finished", "values", report.Values, "chunks", report.Chunks, "info", strings.Join(report.Infos, " | "))
+		}
+	}
 	logger.Info("collection finished", "jobs", len(snapshot.Jobs), "errors", len(snapshot.Errors), "db_missing", strings.Join(snapshot.Health.DBMissing, ","))
 }
 
@@ -227,6 +217,36 @@ func cmdCollect(args []string, cfg config.Config, logger *slog.Logger) int {
 		}
 	}
 	printJSON(snapshot)
+	return 0
+}
+
+func cmdSend(args []string, cfg config.Config, logger *slog.Logger) int {
+	fs := flag.NewFlagSet("send", flag.ContinueOnError)
+	fresh := fs.Bool("fresh", false, "collect before sending")
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+	var snapshot collector.Snapshot
+	var err error
+	if *fresh {
+		snapshot = collectSnapshot(context.Background(), cfg, logger)
+		if err := collector.WriteCache(cfg.Paths.CacheFile, snapshot); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+	} else {
+		snapshot, err = loadOrCollect(cfg, logger)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+	}
+	report, err := zabbix.SendSnapshot(context.Background(), cfg, snapshot)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	printJSON(report)
 	return 0
 }
 
@@ -323,21 +343,45 @@ func cmdDetect(args []string, cfg config.Config, logger *slog.Logger) int {
 	return 0
 }
 
-func cmdInstallUserParameter(args []string, cfg config.Config, configPath string) int {
-	fs := flag.NewFlagSet("install-userparameter", flag.ContinueOnError)
-	binaryPath := fs.String("binary", "", "binary path")
+func cmdConfigure(args []string, cfg config.Config, configPath string) int {
+	fs := flag.NewFlagSet("configure", flag.ContinueOnError)
+	apiToken := fs.String("api-token", "", "API bearer token")
+	apiBind := fs.String("api-bind", "", "API bind address")
+	apiPort := fs.String("api-port", "", "API port")
+	printToken := fs.Bool("print-token", false, "print resulting API token")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
-	if *binaryPath == "" {
-		exe, err := os.Executable()
-		if err == nil {
-			*binaryPath = exe
-		}
+
+	if *apiBind != "" {
+		cfg.API.Bind = *apiBind
 	}
-	if err := zabbix.WriteUserParameter(cfg.Zabbix.UserParameterFile, *binaryPath, configPath); err != nil {
+	if *apiPort != "" {
+		port, err := strconv.Atoi(*apiPort)
+		if err != nil || port <= 0 || port > 65535 {
+			fmt.Fprintln(os.Stderr, "api port must be between 1 and 65535")
+			return 2
+		}
+		cfg.API.Port = port
+	}
+	if *apiToken != "" {
+		cfg.API.Token = strings.TrimSpace(*apiToken)
+	}
+	if cfg.API.Token == "" {
+		token, err := config.GenerateAPIToken()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		cfg.API.Token = token
+	}
+	cfg.API.Enabled = true
+	if err := config.Write(configPath, cfg); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
+	}
+	if *printToken {
+		fmt.Println(cfg.API.Token)
 	}
 	return 0
 }

@@ -1,0 +1,27 @@
+{
+  "ActiveBackupZabbix.js": {
+    "SYNO.SDS.ActiveBackupZabbix.Application": {
+      "type": "app",
+      "title": "Active Backup Zabbix",
+      "desc": "Synology Active Backup Zabbix Monitor",
+      "icon": "images/icon_{0}.png",
+      "appWindow": "SYNO.SDS.ActiveBackupZabbix.MainWindow",
+      "allowMultiInstance": false,
+      "allowStandalone": false,
+      "allowSharing": false,
+      "allUsers": false,
+      "depend": [
+        "SYNO.SDS.ActiveBackupZabbix.MainWindow"
+      ]
+    },
+    "SYNO.SDS.ActiveBackupZabbix.MainWindow": {
+      "type": "lib",
+      "title": "Active Backup Zabbix",
+      "icon": "images/icon_{0}.png",
+      "depend": [
+        "SYNO.SDS.ActiveBackupZabbix.Utils"
+      ]
+    },
+    "SYNO.SDS.ActiveBackupZabbix.Utils": []
+  }
+}

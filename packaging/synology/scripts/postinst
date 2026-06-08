@@ -11,13 +11,26 @@ mkdir -p "${PKG_ROOT}/etc" "${PKG_ROOT}/var/log" "${PKG_ROOT}/var/cache" "${PKG_
 if [ ! -f "${CONFIG_FILE}" ]; then
   if [ -f "${PKG_TARGET}/etc/config.yml" ]; then
     cp "${PKG_TARGET}/etc/config.yml" "${CONFIG_FILE}"
-  elif [ -x "${BIN}" ]; then
-    "${BIN}" --config "${CONFIG_FILE}" write-default-config
   fi
 fi
 
+rm -f "${PKG_TARGET}/ui/index.html" "${PKG_TARGET}/ui/app.js" "${PKG_TARGET}/ui/style.css"
+rm -rf "${PKG_TARGET}/ui/data"
+rm -rf "${PKG_TARGET}/ui/web/data"
+
+if [ -x "${PKG_TARGET}/ui/api.cgi" ]; then
+  chmod 755 "${PKG_TARGET}/ui/api.cgi"
+fi
+
 if [ -x "${BIN}" ]; then
-  "${BIN}" --config "${CONFIG_FILE}" install-userparameter --binary "${BIN}" >/dev/null 2>&1 || true
+  if [ -n "${pkgwizard_api_token:-}" ] || [ -n "${pkgwizard_api_bind:-}" ] || [ -n "${pkgwizard_api_port:-}" ]; then
+    "${BIN}" --config "${CONFIG_FILE}" configure \
+      --api-token "${pkgwizard_api_token:-}" \
+      --api-bind "${pkgwizard_api_bind:-}" \
+      --api-port "${pkgwizard_api_port:-}" >/dev/null 2>&1 || true
+  else
+    "${BIN}" --config "${CONFIG_FILE}" configure >/dev/null 2>&1 || true
+  fi
 fi
 
 exit 0

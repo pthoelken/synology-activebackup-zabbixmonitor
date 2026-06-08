@@ -2,14 +2,27 @@ collector:
   interval_seconds: 300
   max_age_hours: 30
 
-zabbix:
-  mode: agent
-  userparameter_file: /etc/zabbix/zabbix_agent2.d/synology_activebackup.conf
-
-http:
+api:
   enabled: true
-  bind: 127.0.0.1
+  bind: 0.0.0.0
   port: 9876
+  token: ""
+
+zabbix:
+  mode: api
+  sender:
+    server: ""
+    port: 10051
+    host: ""
+    timeout_seconds: 30
+    chunk_size: 250
+    tls: none
+    server_name: ""
+    ca_file: ""
+    cert_file: ""
+    key_file: ""
+    psk_identity: ""
+    psk: ""
 
 products:
   active_backup_business:
@@ -17,7 +30,6 @@ products:
     scan_paths:
       - /volume*/@ActiveBackup
       - /volume*/ActiveBackupforBusiness
-      - /volume*/@ActiveBackup*/db
   active_backup_m365:
     enabled: true
     scan_paths:
@@ -29,6 +41,7 @@ logging:
 paths:
   package_root: /var/packages/synology-activebackup-zabbix
   cache_file: /var/packages/synology-activebackup-zabbix/var/cache/status.json
+  sender_log_file: /var/packages/synology-activebackup-zabbix/var/cache/sender-log.json
   log_dir: /var/packages/synology-activebackup-zabbix/var/log
   run_dir: /var/packages/synology-activebackup-zabbix/var/run
 
