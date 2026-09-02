@@ -72,6 +72,8 @@ The collector is implemented in Go because the package needs a long-running daem
 - Active Backup for Microsoft 365 from `/volume*/@ActiveBackup-Office365/db/log.sqlite`
 - Active Backup for Business by scanning likely ABB SQLite databases below `/volume*/@ActiveBackup` and `/volume*/ActiveBackupforBusiness`
 
+For Active Backup for Business, per-device partially completed jobs are treated as Warning so that the corresponding Zabbix warning trigger fires.
+
 For Microsoft 365, completed runs with skipped items are treated as Warning, not Failed.
 
 <a id="runtime-paths"></a>
