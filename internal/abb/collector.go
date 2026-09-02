@@ -474,6 +474,7 @@ func structuredABBDeviceQuery(strictDeviceMatch bool, sizeExpr string, includeRe
 		LEFT JOIN task_table tt ON tt.task_id = btd.task_id
 		` + resultJoin + `
 		LEFT JOIN activity.device_result_table drt ON rt.result_id = drt.result_id
+			AND drt.config_device_id = dt.device_id
 		` + detailJoin + `
 		WHERE (rt.job_action IS NULL OR rt.job_action = 1)
 		  ` + detailWhere + `
