@@ -1,7 +1,7 @@
 # Synology Active Backup Zabbix Monitor
 
 [![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://go.dev/)
-[![Synology DSM](https://img.shields.io/badge/Synology%20DSM-7.0%2B-0086C3?style=for-the-badge&logo=synology&logoColor=white)](https://www.synology.com/dsm)
+[![Synology DSM](https://img.shields.io/badge/Synology%20DSM-7.4%2B-0086C3?style=for-the-badge&logo=synology&logoColor=white)](https://www.synology.com/dsm)
 [![Zabbix](https://img.shields.io/badge/Zabbix-8.0beta2-D40000?style=for-the-badge&logo=zabbix&logoColor=white)](https://www.zabbix.com/)
 [![SPK](https://img.shields.io/badge/SPK-x86__64%20%7C%20aarch64-4B5563?style=for-the-badge)](#build)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F?style=for-the-badge)](LICENSE)
