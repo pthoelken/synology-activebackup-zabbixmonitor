@@ -1,4 +1,4 @@
-VERSION ?= 0.1.17
+VERSION ?= 0.2.5
 
 .PHONY: build spk clean
 

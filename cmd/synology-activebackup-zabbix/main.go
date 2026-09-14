@@ -19,12 +19,13 @@ import (
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/collector"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/config"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/dsmcgi"
+	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/hyperbackup"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/logging"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/m365"
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/zabbix"
 )
 
-var version = "0.1.16"
+var version = "0.2.5"
 
 func main() {
 	os.Exit(run(os.Args[1:]))
@@ -164,7 +165,7 @@ func collectAndStore(ctx context.Context, cfg config.Config, store *collector.St
 
 func cmdDiscovery(args []string, cfg config.Config, logger *slog.Logger) int {
 	fs := flag.NewFlagSet("discovery", flag.ContinueOnError)
-	product := fs.String("product", "", "filter product: abb or m365")
+	product := fs.String("product", "", "filter product: abb, m365 or hyperbackup")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -252,7 +253,7 @@ func cmdSend(args []string, cfg config.Config, logger *slog.Logger) int {
 
 func cmdJob(args []string, cfg config.Config, logger *slog.Logger) int {
 	fs := flag.NewFlagSet("job", flag.ContinueOnError)
-	product := fs.String("product", "", "product: abb or m365")
+	product := fs.String("product", "", "product: abb, m365 or hyperbackup")
 	taskID := fs.String("task-id", "", "task id")
 	field := fs.String("field", "", "field for Zabbix item")
 	if err := fs.Parse(args); err != nil {
@@ -420,6 +421,19 @@ func collectSnapshot(ctx context.Context, cfg config.Config, logger *slog.Logger
 			RedactNames: cfg.Privacy.RedactNames,
 			Logger:      logger,
 		}.Collect(ctx, now)
+		jobs = append(jobs, result.Jobs...)
+		sources = append(sources, result.Sources...)
+		errors = appendErrors(errors, result.Errors)
+	}
+
+	if cfg.Products.HyperBackup.Enabled {
+		enabledProducts[collector.ProductHyperBackup] = true
+		result := (hyperbackup.Collector{API: hyperbackup.APIConfig{
+			URL:                cfg.Products.HyperBackup.APIURL,
+			InsecureSkipVerify: cfg.Products.HyperBackup.InsecureSkipVerify,
+			Username:           cfg.Products.HyperBackup.Username,
+			Password:           cfg.Products.HyperBackup.Password,
+		}}).Collect(ctx, now)
 		jobs = append(jobs, result.Jobs...)
 		sources = append(sources, result.Sources...)
 		errors = appendErrors(errors, result.Errors)

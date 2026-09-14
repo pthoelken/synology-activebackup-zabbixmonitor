@@ -103,3 +103,7 @@ Status value map:
 These are normalized monitoring statuses, not the raw status codes stored in the Synology databases. For Active Backup for Business, warning and partial-completion results, including raw status codes `5` and `8`, are normalized to status `2`. A raw ABB status of `2` remains a successful result and is normalized to status `1`.
 
 ABB device results are matched to the corresponding device before their status is normalized. This prevents the status of another device in the same backup task from being reported for the discovered job. Both supplied Zabbix templates already raise their backup warning trigger when the normalized job status is `2`, so this behavior does not require a template change.
+
+## Hyper Backup
+
+Re-import the updated template for your monitoring mode before enabling Hyper Backup. Existing template UUIDs, item keys and macros are preserved. Generic discovery includes `hyperbackup` jobs automatically; both templates add `synology.activebackup.product.db_missing[hyperbackup]` for source availability. The historical `db_missing` name also covers an unavailable local API. Disabled Hyper Backup reports zero for this item. Backup status, last success age, runtime, last end time and JSON details use the existing prototypes and alarms. Transferred size is zero when unavailable; see [data semantics and validation](HYPERBACKUP.md).

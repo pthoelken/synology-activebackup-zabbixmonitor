@@ -62,8 +62,17 @@ type ZabbixSenderConfig struct {
 }
 
 type ProductsConfig struct {
-	ActiveBackupBusiness ProductConfig `yaml:"active_backup_business" json:"active_backup_business"`
-	ActiveBackupM365     ProductConfig `yaml:"active_backup_m365" json:"active_backup_m365"`
+	HyperBackup          HyperBackupConfig `yaml:"hyper_backup" json:"hyper_backup"`
+	ActiveBackupBusiness ProductConfig     `yaml:"active_backup_business" json:"active_backup_business"`
+	ActiveBackupM365     ProductConfig     `yaml:"active_backup_m365" json:"active_backup_m365"`
+}
+
+type HyperBackupConfig struct {
+	InsecureSkipVerify bool   `yaml:"insecure_skip_verify" json:"insecure_skip_verify"`
+	APIURL             string `yaml:"api_url" json:"api_url"`
+	Username           string `yaml:"username" json:"username"`
+	Password           string `yaml:"password" json:"password"`
+	Enabled            bool   `yaml:"enabled" json:"enabled"`
 }
 
 type ProductConfig struct {
@@ -177,7 +186,23 @@ func Write(path string, cfg Config) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	// The config can contain a DSM password as well as Zabbix and API secrets.
+	// Restrict existing files too: WriteFile does not change their permissions.
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := file.Chmod(0600); err != nil {
+		return err
+	}
+	if err := file.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := file.Write(data); err != nil {
+		return err
+	}
+	return file.Close()
 }
 
 func (c *Config) normalize() {

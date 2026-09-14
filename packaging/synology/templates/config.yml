@@ -25,6 +25,12 @@ zabbix:
     psk: ""
 
 products:
+  hyper_backup:
+    enabled: false
+    insecure_skip_verify: false
+    api_url: ""
+    username: ""
+    password: ""
   active_backup_business:
     enabled: true
     scan_paths:

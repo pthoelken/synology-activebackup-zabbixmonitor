@@ -684,7 +684,15 @@ func sizeJSONKeys() []string {
 
 func latestStructuredRun(runs []structuredRun) structuredRun {
 	sort.SliceStable(runs, func(i, j int) bool {
-		return structuredRunTime(runs[i]).After(structuredRunTime(runs[j]))
+		iTime := structuredRunTime(runs[i])
+		jTime := structuredRunTime(runs[j])
+		if iTime.Equal(jTime) {
+			// ABB can store multiple device_result_table rows for the same
+			// result and device. Prefer the populated byte counter over its
+			// companion row with zero bytes.
+			return runs[i].TransferredSize > runs[j].TransferredSize
+		}
+		return iTime.After(jTime)
 	})
 	if len(runs) == 0 {
 		return structuredRun{}

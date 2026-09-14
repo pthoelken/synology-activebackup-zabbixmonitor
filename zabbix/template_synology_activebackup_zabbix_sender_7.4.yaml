@@ -8,11 +8,11 @@ zabbix_export:
   - uuid: 7abf2d51f3c54c2c8f4d71b8e7df1002
     template: Template Synology Active Backup Zabbix Sender
     name: Template Synology Active Backup Zabbix Sender
-    description: Monitors Synology Active Backup via active pushes from the synology-activebackup-zabbix
+    description: Monitors Synology Active Backup and Hyper Backup via active pushes from the synology-activebackup-zabbix
       DSM package to Zabbix trapper items.
     vendor:
       name: pthoelken
-      version: 0.1.16
+      version: 0.2.5
     groups:
     - name: Templates/Synology
     items:
@@ -96,6 +96,28 @@ zabbix_export:
       - uuid: 7abf2d51f3c54c2c8f4d71b8e7df1203
         expression: last(/Template Synology Active Backup Zabbix Sender/synology.activebackup.product.db_missing[m365])=1
         name: 'Active Backup for Microsoft 365: Database not found'
+        priority: HIGH
+        tags:
+        - tag: scope
+          value: availability
+      allowed_hosts: "{$ACTIVEBACKUP.SENDER.ALLOWED_HOSTS}"
+    - uuid: 7abf2d51f3c54c2c8f4d71b8e7df1109
+      name: Hyper Backup data source unavailable
+      type: TRAP
+      key: synology.activebackup.product.db_missing[hyperbackup]
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      tags:
+      - tag: component
+        value: collector
+      - tag: product
+        value: hyperbackup
+      triggers:
+      - uuid: 7abf2d51f3c54c2c8f4d71b8e7df1205
+        expression: last(/Template Synology Active Backup Zabbix Sender/synology.activebackup.product.db_missing[hyperbackup])=1
+        name: 'Hyper Backup: Data source unavailable'
         priority: HIGH
         tags:
         - tag: scope

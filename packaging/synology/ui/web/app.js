@@ -195,7 +195,7 @@ function renderOverview() {
 
   const errors = [];
   (health.db_missing || []).forEach(function(item) {
-    errors.push(`DB missing: ${item}`);
+    errors.push(item === "hyperbackup" ? "Hyper Backup data source unavailable" : `DB missing: ${item}`);
   });
   (health.collector_errors || []).forEach(function(item) {
     errors.push(item);
@@ -359,6 +359,7 @@ function renderConfig() {
   const products = cfg.products || {};
   const abb = products.active_backup_business || {};
   const m365 = products.active_backup_m365 || {};
+  const hyperBackup = products.hyper_backup || {};
   const logging = cfg.logging || {};
   const privacy = cfg.privacy || {};
   const zabbix = cfg.zabbix || {};
@@ -436,8 +437,13 @@ function renderConfig() {
           ${checkboxField("redactNames", "Redact Microsoft 365 names", privacy.redact_names !== false)}
           ${checkboxField("abbEnabled", "Active Backup for Business", abb.enabled !== false)}
           ${checkboxField("m365Enabled", "Active Backup for Microsoft 365", m365.enabled !== false)}
+          ${checkboxField("hyperBackupEnabled", "Hyper Backup", hyperBackup.enabled === true)}
           ${textareaField("abbPaths", "ABB scan paths", abbPaths.join("\n"))}
           ${textareaField("m365Paths", "M365 scan paths", m365Paths.join("\n"))}
+          ${textField("hyperBackupURL", "Hyper Backup DSM HTTPS URL (empty for local access)", hyperBackup.api_url || "")}
+          ${textField("hyperBackupUsername", "Hyper Backup DSM username", hyperBackup.username || "")}
+          ${secretField("hyperBackupPassword", "Hyper Backup DSM password", hyperBackup.password || "")}
+          ${checkboxField("hyperBackupInsecureSkipVerify", "Ignore Hyper Backup TLS certificate errors (server identity is not verified)", hyperBackup.insecure_skip_verify === true)}
         </div>
       </section>
     </div>
@@ -558,6 +564,7 @@ function formConfig() {
   next.products = next.products || {};
   next.products.active_backup_business = next.products.active_backup_business || {};
   next.products.active_backup_m365 = next.products.active_backup_m365 || {};
+  next.products.hyper_backup = next.products.hyper_backup || {};
 
   next.collector.interval_seconds = readPositiveInt("collectorInterval", "Collector interval seconds");
   next.collector.max_age_hours = readPositiveInt("collectorMaxAge", "Max age hours");
@@ -598,6 +605,23 @@ function formConfig() {
   next.privacy.redact_names = document.getElementById("redactNames").checked;
   next.products.active_backup_business.enabled = document.getElementById("abbEnabled").checked;
   next.products.active_backup_business.scan_paths = readPaths("abbPaths");
+  next.products.hyper_backup.enabled = document.getElementById("hyperBackupEnabled").checked;
+  next.products.hyper_backup.api_url = document.getElementById("hyperBackupURL").value.trim();
+  next.products.hyper_backup.username = document.getElementById("hyperBackupUsername").value.trim();
+  next.products.hyper_backup.password = document.getElementById("hyperBackupPassword").value;
+  next.products.hyper_backup.insecure_skip_verify = document.getElementById("hyperBackupInsecureSkipVerify").checked;
+  if (next.products.hyper_backup.enabled && next.products.hyper_backup.api_url) {
+    let url;
+    try { url = new URL(next.products.hyper_backup.api_url); } catch {
+      throw new Error("Enter a valid Hyper Backup DSM HTTPS URL, for example https://nas.example.com:5001");
+    }
+    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/") {
+      throw new Error("Hyper Backup DSM URL must use HTTPS with no path, credentials or query parameters");
+    }
+    if (!next.products.hyper_backup.username || !next.products.hyper_backup.password) {
+      throw new Error("Enter the DSM username and password for Hyper Backup HTTPS access");
+    }
+  }
   next.products.active_backup_m365.enabled = document.getElementById("m365Enabled").checked;
   next.products.active_backup_m365.scan_paths = readPaths("m365Paths");
   return next;
@@ -612,11 +636,13 @@ async function saveConfig(event) {
     const result = await writeJSON("config", formConfig());
     state.config = result.config || state.config;
     state.configNotice = result.restart_required ? "Package restart required. Stop and run it again in Package Center." : "";
+    renderConfig();
   } catch (err) {
     state.configNotice = err.message;
+    // Keep entered settings so a validation or connection error is recoverable.
+    document.getElementById("configActionNotice").textContent = state.configNotice;
   } finally {
     button.disabled = false;
-    renderConfig();
   }
 }
 

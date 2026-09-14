@@ -36,6 +36,12 @@ zabbix:
     psk: ""
 
 products:
+  hyper_backup:
+    enabled: false
+    insecure_skip_verify: false
+    api_url: ""
+    username: ""
+    password: ""
   active_backup_business:
     enabled: true
     scan_paths:
@@ -69,3 +75,5 @@ privacy:
 `privacy.redact_names` avoids exposing Microsoft 365 user names and email addresses in discovered job names. Set it to `false` only when the Zabbix host is allowed to store those names.
 
 Runtime changes still require a package restart because the listener, collector, and sender settings are read at service start. Stop and run the package again from DSM Package Center.
+
+Hyper Backup is disabled by default, including when upgrading an existing configuration. Enable `products.hyper_backup.enabled` in YAML or select **Hyper Backup** under **Config → Products**, save, and restart the package. Set `api_url` to the DSM HTTPS origin and supply `username`/`password` for access as the standard package user. An empty `api_url` selects local `synowebapi` access, which may require privileges unavailable to that account. Hyper Backup has no database scan paths. See [Hyper Backup](HYPERBACKUP.md) for permissions and diagnostics.
