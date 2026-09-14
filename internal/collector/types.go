@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	ProductABB  = "abb"
-	ProductM365 = "m365"
+	ProductHyperBackup = "hyperbackup"
+	ProductABB         = "abb"
+	ProductM365        = "m365"
 
 	StatusOK        = 1
 	StatusWarning   = 2
@@ -73,6 +74,21 @@ type Result struct {
 func StatusFromRaw(product string, raw string) int {
 	raw = strings.TrimSpace(strings.ToLower(raw))
 	switch product {
+	case ProductHyperBackup:
+		switch raw {
+		case "done", "success":
+			return StatusOK
+		case "partial", "cancel", "cancelled", "canceled", "suspend", "discard":
+			return StatusWarning
+		case "backingup", "resuming", "version_deleting", "running", "checking", "relinking":
+			return StatusRunning
+		case "failed", "cksum_failed", "dest_missing", "failed_checking", "version_delete_failed":
+			return StatusFailed
+		case "", "none":
+			return StatusNoData
+		default:
+			return StatusUnknown
+		}
 	case ProductABB:
 		switch raw {
 		case "2", "successful", "success", "succeeded", "ok", "completed", "complete", "finished", "done":

@@ -6,7 +6,7 @@
 [![SPK](https://img.shields.io/badge/SPK-x86__64%20%7C%20aarch64-4B5563?style=for-the-badge)](#build)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F?style=for-the-badge)](LICENSE)
 
-DSM 7 package project for monitoring Synology Active Backup for Business and Active Backup for Microsoft 365 with Zabbix 7.4.
+DSM 7 package project for monitoring Synology Active Backup for Business, Active Backup for Microsoft 365 and Hyper Backup with Zabbix 7.4.
 
 The collector is implemented in Go because the package needs a long-running daemon, a CLI, structured JSON cache output, and cross-architecture builds for DSM. A single Go binary keeps DSM packaging simpler than a multi-script solution and avoids requiring Python, Node.js, or shell-only parsing on the NAS.
 
@@ -35,7 +35,7 @@ The collector is implemented in Go because the package needs a long-running daem
 | Area          | Details                                                     |
 | ------------- | ----------------------------------------------------------- |
 | Package       | DSM 7 SPK package                                           |
-| Products      | Active Backup for Business, Active Backup for Microsoft 365 |
+| Products      | Active Backup for Business, Active Backup for Microsoft 365, Hyper Backup |
 | Monitoring    | Zabbix 7.4 templates for API pull and sender push           |
 | Runtime       | Single Go daemon with CLI helpers and JSON cache output     |
 | Architectures | `x86_64`, `aarch64`                                         |
@@ -70,6 +70,7 @@ The collector is implemented in Go because the package needs a long-running daem
 ## What It Monitors 🔎
 
 - Active Backup for Microsoft 365 from `/volume*/@ActiveBackup-Office365/db/log.sqlite`
+- Hyper Backup (opt-in) through the DSM task API (HTTPS or local access); see [setup, permissions and validation](docs/HYPERBACKUP.md)
 - Active Backup for Business by scanning likely ABB SQLite databases below `/volume*/@ActiveBackup` and `/volume*/ActiveBackupforBusiness`
 
 For Active Backup for Business, per-device partially completed jobs are treated as Warning so that the corresponding Zabbix warning trigger fires.

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestStructuredABBDeviceQueryMatchesResultToDevice(t *testing.T) {
@@ -54,5 +55,18 @@ func TestStructuredABBDeviceQueryKeepsPerDeviceStatus(t *testing.T) {
 	}
 	if got := statuses["14"]; got != "5" {
 		t.Fatalf("device 14 status = %q, want 5", got)
+	}
+}
+
+func TestLatestStructuredRunPrefersTransferredBytesForDuplicateResult(t *testing.T) {
+	ended := time.Unix(1_757_000_000, 0)
+	runs := []structuredRun{
+		{DeviceID: "1", End: &ended, TransferredSize: 0},
+		{DeviceID: "1", End: &ended, TransferredSize: 146_470_069},
+	}
+
+	got := latestStructuredRun(runs)
+	if got.TransferredSize != 146_470_069 {
+		t.Fatalf("TransferredSize = %d, want 146470069", got.TransferredSize)
 	}
 }

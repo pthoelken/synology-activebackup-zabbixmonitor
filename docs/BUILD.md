@@ -22,13 +22,13 @@ GitHub releases are created automatically for every push to `main` by `.github/w
 
 The build script creates:
 
-- `dist/synology-activebackup-zabbixmonitor-0.1.16-x86_64.spk`
-- `dist/synology-activebackup-zabbixmonitor-0.1.16-aarch64.spk`
+- `dist/synology-activebackup-zabbixmonitor-0.2.5-x86_64.spk`
+- `dist/synology-activebackup-zabbixmonitor-0.2.5-aarch64.spk`
 
 Set a release version with:
 
 ```sh
-make spk VERSION=0.2.0
+make spk VERSION=0.2.5
 ```
 
 The SPK contains `INFO`, package icons, `conf/privilege`, `WIZARD_UIFILES`, Synology package scripts, `package.tgz`, the binary, DSM desktop app files, default config, docs, and the Zabbix templates.

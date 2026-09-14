@@ -190,7 +190,7 @@ func SnapshotSenderValues(cfg config.Config, snapshot collector.Snapshot) ([]Sen
 		return nil, err
 	}
 	add("synology.activebackup.health.json", healthJSON)
-	for _, product := range []string{collector.ProductABB, collector.ProductM365} {
+	for _, product := range []string{collector.ProductABB, collector.ProductM365, collector.ProductHyperBackup} {
 		missing, err := HealthField(snapshot, "db_missing", product)
 		if err != nil {
 			return nil, err
