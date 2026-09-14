@@ -77,7 +77,7 @@ func StatusFromRaw(product string, raw string) int {
 		switch raw {
 		case "2", "successful", "success", "succeeded", "ok", "completed", "complete", "finished", "done":
 			return StatusOK
-		case "1", "3", "5", "incomplete", "partial successful", "partial_successful", "partial", "canceled", "cancelled":
+		case "1", "3", "5", "8", "incomplete", "partial successful", "partial_successful", "partial success", "partial_success", "partial", "partially completed", "not fully completed", "completed with warnings", "canceled", "cancelled":
 			return StatusWarning
 		case "4", "failed", "failure", "error", "aborted":
 			return StatusFailed

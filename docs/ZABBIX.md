@@ -99,3 +99,7 @@ Status value map:
 - `8` = No data
 - `9` = DB missing
 - `10` = Unknown
+
+These are normalized monitoring statuses, not the raw status codes stored in the Synology databases. For Active Backup for Business, warning and partial-completion results, including raw status codes `5` and `8`, are normalized to status `2`. A raw ABB status of `2` remains a successful result and is normalized to status `1`.
+
+ABB device results are matched to the corresponding device before their status is normalized. This prevents the status of another device in the same backup task from being reported for the discovered job. Both supplied Zabbix templates already raise their backup warning trigger when the normalized job status is `2`, so this behavior does not require a template change.
