@@ -11,7 +11,7 @@ zabbix_export:
         Monitors Synology Active Backup for Business, Active Backup for Microsoft 365 and Hyper Backup via the synology-activebackup-zabbix DSM package.
       vendor:
         name: pthoelken
-        version: 0.2.5
+        version: 0.2.6
       groups:
         - name: Templates/Synology
       items:
@@ -417,6 +417,19 @@ zabbix_export:
               tags:
                 - tag: scope
                   value: availability
+          overrides:
+            - name: 'Disable transferred size when the source does not provide it'
+              step: '1'
+              filter:
+                conditions:
+                  - macro: '{#TRANSFERREDSIZEAVAILABLE}'
+                    value: '0'
+              operations:
+                - operationobject: ITEM_PROTOTYPE
+                  operator: LIKE
+                  value: 'Backup transferred size'
+                  discover: NO_DISCOVER
+                  status: DISABLED
       tags:
         - tag: class
           value: backup

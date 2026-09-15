@@ -14,11 +14,12 @@ type Discovery struct {
 }
 
 type DiscoveryEntry struct {
-	Product     string `json:"{#PRODUCT}"`
-	TaskID      string `json:"{#TASKID}"`
-	JobName     string `json:"{#JOBNAME}"`
-	ServiceType string `json:"{#SERVICETYPE}"`
-	BackupType  string `json:"{#BACKUPTYPE}"`
+	Product                  string `json:"{#PRODUCT}"`
+	TaskID                   string `json:"{#TASKID}"`
+	JobName                  string `json:"{#JOBNAME}"`
+	ServiceType              string `json:"{#SERVICETYPE}"`
+	BackupType               string `json:"{#BACKUPTYPE}"`
+	TransferredSizeAvailable string `json:"{#TRANSFERREDSIZEAVAILABLE}"`
 }
 
 func DiscoveryJSON(snapshot collector.Snapshot, product string) ([]byte, error) {
@@ -31,11 +32,12 @@ func DiscoveryJSON(snapshot collector.Snapshot, product string) ([]byte, error) 
 			continue
 		}
 		entries = append(entries, DiscoveryEntry{
-			Product:     job.Product,
-			TaskID:      job.TaskID,
-			JobName:     job.JobName,
-			ServiceType: job.ServiceType,
-			BackupType:  job.BackupType,
+			Product:                  job.Product,
+			TaskID:                   job.TaskID,
+			JobName:                  job.JobName,
+			ServiceType:              job.ServiceType,
+			BackupType:               job.BackupType,
+			TransferredSizeAvailable: transferredSizeAvailable(job.Product),
 		})
 	}
 	sort.Slice(entries, func(i, j int) bool {
@@ -45,6 +47,13 @@ func DiscoveryJSON(snapshot collector.Snapshot, product string) ([]byte, error) 
 		return entries[i].Product < entries[j].Product
 	})
 	return json.Marshal(Discovery{Data: entries})
+}
+
+func transferredSizeAvailable(product string) string {
+	if product == collector.ProductHyperBackup {
+		return "0"
+	}
+	return "1"
 }
 
 func FindJob(snapshot collector.Snapshot, product string, taskID string) (collector.Job, bool) {

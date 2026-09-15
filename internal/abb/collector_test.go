@@ -58,6 +58,44 @@ func TestStructuredABBDeviceQueryKeepsPerDeviceStatus(t *testing.T) {
 	}
 }
 
+func TestStructuredABBDeviceQueryDoesNotDependOnTaskConfigFormat(t *testing.T) {
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	statements := []string{
+		`ATTACH DATABASE ':memory:' AS activity`,
+		`CREATE TABLE device_table (host_name TEXT, device_id INTEGER)`,
+		`CREATE TABLE backup_task_device (device_id INTEGER, task_id INTEGER)`,
+		`CREATE TABLE task_table (task_id INTEGER, task_name TEXT, source_type INTEGER, backup_type INTEGER, sched_content TEXT)`,
+		`CREATE TABLE activity.result_table (result_id INTEGER, task_id INTEGER, task_config TEXT, time_start INTEGER, time_end INTEGER, job_action INTEGER)`,
+		`CREATE TABLE activity.device_result_table (device_result_id INTEGER, result_id INTEGER, config_device_id INTEGER, status INTEGER, transfered_bytes INTEGER)`,
+		`INSERT INTO device_table VALUES ('SSB-STO-BA01', 1)`,
+		`INSERT INTO backup_task_device VALUES (1, 1)`,
+		`INSERT INTO task_table VALUES (1, 'Backup', 0, 1, '{}')`,
+		`INSERT INTO activity.result_table VALUES (193, 1, '{"device_ids":[1]}', 1757000000, 1757000060, 1)`,
+		`INSERT INTO activity.device_result_table VALUES (1, 193, 1, 2, 146470069)`,
+		`INSERT INTO activity.device_result_table VALUES (2, 193, 1, 2, 0)`,
+	}
+	for _, statement := range statements {
+		if _, err := db.Exec(statement); err != nil {
+			t.Fatalf("execute %q: %v", statement, err)
+		}
+	}
+
+	sizeExpr := `COALESCE(NULLIF(CAST(drt."transfered_bytes" AS INTEGER), 0), 0)`
+	runs, err := readStructuredRuns(context.Background(), db, structuredABBDeviceQuery(false, sizeExpr, false), "activity.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := latestStructuredRun(runs)
+	if got.TransferredSize != 146_470_069 {
+		t.Fatalf("TransferredSize = %d, want 146470069", got.TransferredSize)
+	}
+}
+
 func TestLatestStructuredRunPrefersTransferredBytesForDuplicateResult(t *testing.T) {
 	ended := time.Unix(1_757_000_000, 0)
 	runs := []structuredRun{

@@ -12,7 +12,7 @@ zabbix_export:
       DSM package to Zabbix trapper items.
     vendor:
       name: pthoelken
-      version: 0.2.5
+      version: 0.2.6
     groups:
     - name: Templates/Synology
     items:
@@ -329,6 +329,19 @@ zabbix_export:
         tags:
         - tag: scope
           value: availability
+      overrides:
+      - name: Disable transferred size when the source does not provide it
+        step: '1'
+        filter:
+          conditions:
+          - macro: '{#TRANSFERREDSIZEAVAILABLE}'
+            value: '0'
+        operations:
+        - operationobject: ITEM_PROTOTYPE
+          operator: LIKE
+          value: Backup transferred size
+          discover: NO_DISCOVER
+          status: DISABLED
       allowed_hosts: "{$ACTIVEBACKUP.SENDER.ALLOWED_HOSTS}"
     tags:
     - tag: class

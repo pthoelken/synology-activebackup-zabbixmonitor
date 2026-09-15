@@ -25,7 +25,7 @@ import (
 	"github.com/pthoelken/synology-activebackup-zabbixmonitor/internal/zabbix"
 )
 
-var version = "0.2.5"
+var version = "0.2.6"
 
 func main() {
 	os.Exit(run(os.Args[1:]))

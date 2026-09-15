@@ -4,7 +4,7 @@ Implements [feature request #2](https://github.com/pthoelken/synology-activeback
 
 ## Enable and upgrade
 
-1. Install the 0.2.5 SPK matching the NAS architecture.
+1. Install the 0.2.6 SPK matching the NAS architecture.
 2. Re-import the updated API or sender Zabbix template. Preserve the host's existing macros. Template names, UUIDs and existing item keys remain unchanged.
 3. In the DSM app, select **Config → Products → Hyper Backup**. Enter the DSM HTTPS URL, username and password (recommended for the standard package user), save and restart the package through Package Center. Alternatively set:
 
@@ -40,7 +40,7 @@ The call structure is based on the [synology-api implementation](https://github.
 - Empty/`none` results are No data. Successful results without an end timestamp are also No data. New tasks remain discoverable, so the existing no-data trigger applies.
 - Start, end and last-success timestamps accept Unix values and NAS-local date strings (with or without seconds). Missing timestamps stay absent. The collector never substitutes the current time for a missing backup. An explicitly successful last result may use its end time as the last-success time if that field is absent.
 - Runtime and age describe the metadata returned by Hyper Backup, which may still refer to the previous run while a new backup is active. Current activity is available separately in `info.activity`.
-- Transferred bytes are not reliably defined by this endpoint and remain zero. Zero here means unavailable, not proof of a zero-byte backup.
+- `SYNO.Backup.Task.status` does not return a completed-run byte count. Discovery therefore marks transferred size as unavailable for Hyper Backup, and sender mode does not submit a fabricated zero. The Zabbix templates suppress this item for Hyper Backup while retaining it for ABB and Microsoft 365.
 - Query/schema errors preserve discovered tasks as Unknown and expose a collector error. An empty task list is valid. The legacy health field `db_missing` means unavailable data source for Hyper Backup, including API failures.
 
 ## Verify on a NAS

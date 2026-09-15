@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/binary"
+	"encoding/json"
 	"encoding/pem"
 	"math/big"
 	"net"
@@ -29,6 +30,36 @@ func TestSenderPacket(t *testing.T) {
 	}
 	if !bytes.Equal(packet[13:], payload) {
 		t.Fatalf("payload mismatch")
+	}
+}
+
+func TestHyperBackupSenderOmitsUnavailableTransferredSize(t *testing.T) {
+	cfg := config.Default()
+	cfg.Zabbix.Sender.Host = "NAS-HOST"
+	values, err := SnapshotSenderValues(cfg, collector.Snapshot{
+		CollectedAt: time.Now(),
+		Jobs: []collector.Job{{
+			Product: collector.ProductHyperBackup,
+			TaskID:  "1",
+			HasData: true,
+		}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, value := range values {
+		if value.Key == "synology.activebackup.job.transferred_size[hyperbackup,1]" {
+			t.Fatal("sent unsupported Hyper Backup transferred size")
+		}
+		if value.Key == "synology.activebackup.discovery" {
+			var discovery Discovery
+			if err := json.Unmarshal([]byte(value.Value), &discovery); err != nil {
+				t.Fatal(err)
+			}
+			if len(discovery.Data) != 1 || discovery.Data[0].TransferredSizeAvailable != "0" {
+				t.Fatalf("unexpected discovery: %+v", discovery)
+			}
+		}
 	}
 }
 

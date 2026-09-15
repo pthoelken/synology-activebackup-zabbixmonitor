@@ -49,6 +49,9 @@ func TestHyperBackupTemplateContract(t *testing.T) {
 		if !keys["synology.activebackup.product.db_missing[hyperbackup]"] {
 			t.Fatalf("missing Hyper Backup source item in %s", path)
 		}
+		if !strings.Contains(string(data), "{#TRANSFERREDSIZEAVAILABLE}") || !strings.Contains(string(data), "discover: NO_DISCOVER") {
+			t.Fatalf("missing transferred-size capability override in %s", path)
+		}
 		if strings.Contains(path, "sender") {
 			cfg := config.Default()
 			cfg.Zabbix.Sender.Host = "nas"

@@ -302,10 +302,10 @@ func (c Collector) collectStructured(ctx context.Context, set abbDBSet, now time
 	})
 	hasResultDetails := synology.HasTable(activityTables, "result_detail_table")
 
-	deviceRuns, err := readStructuredRuns(ctx, db, structuredABBDeviceQuery(true, deviceSizeExpr, hasResultDetails), set.Activity)
-	if err != nil {
-		deviceRuns, err = readStructuredRuns(ctx, db, structuredABBDeviceQuery(false, deviceSizeExpr, hasResultDetails), set.Activity)
-	}
+	// result_table.result_id and device_result_table.config_device_id already
+	// identify the result for a device. task_config varies between ABB versions
+	// and is not a reliable join condition.
+	deviceRuns, err := readStructuredRuns(ctx, db, structuredABBDeviceQuery(false, deviceSizeExpr, hasResultDetails), set.Activity)
 	if err != nil {
 		return nil, err
 	}

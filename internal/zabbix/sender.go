@@ -216,6 +216,9 @@ func SnapshotSenderValues(cfg config.Config, snapshot collector.Snapshot) ([]Sen
 			"last_end_time",
 			"info",
 		} {
+			if field == "transferred_size" && transferredSizeAvailable(job.Product) == "0" {
+				continue
+			}
 			value, err := JobField(job, field)
 			if err != nil {
 				return nil, err

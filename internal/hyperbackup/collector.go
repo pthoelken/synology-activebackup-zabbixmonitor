@@ -223,7 +223,9 @@ func fillJob(job *collector.Job, s status, now time.Time) error {
 	}
 	job.LastSuccessAgeSeconds = synology.AgeSeconds(now, job.LastSuccessTime)
 	job.Info["status"] = collector.StatusName(job.Status)
-	// The status endpoint does not document transferred bytes. Leave size at zero.
+	// SYNO.Backup.Task.status does not return a completed-run byte count. The
+	// discovery contract marks this metric unavailable instead of reporting a
+	// misleading zero-byte backup.
 	return nil
 }
 
